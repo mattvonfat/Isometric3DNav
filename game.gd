@@ -70,8 +70,17 @@ func generate_nav_mesh():
 				0: #flat
 					add_flat_polygons(tile, layer_id, new_mesh)
 				
+				1: # NE ramp
+					add_ne_ramp_polygons(tile, layer_id, new_mesh)
+				
+				2: # SE ramp
+					add_se_ramp_polygons(tile, layer_id, new_mesh)
+				
 				3: # SW ramp
 					add_sw_ramp_polygons(tile, layer_id, new_mesh)
+				
+				4: # NW ramp
+					add_nw_ramp_polygons(tile, layer_id, new_mesh)
 	
 	# save the nav mesh - only done so it can be viewed outside of the program for debug purposes
 	var save_result = ResourceSaver.save(new_mesh, "nav_mesh.tres", 1)
@@ -139,6 +148,118 @@ func add_flat_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
 	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v3), vertices.find(v4)]))
 
 
+
+
+
+func add_ne_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
+	# this funtion is similar to the above with a few chnages
+	var vertices:PackedVector3Array = mesh.get_vertices()
+	
+	var v1:Vector3
+	var v2:Vector3
+	var v3:Vector3
+	var v4:Vector3
+	
+	# the top and right vertices of this tile will be in the same position as the left and bottom vertices of the tile
+	# this ramp connects to, so we find the tile that this ramp connects to on the lower layer
+	var lower_tile = Vector2i()
+	lower_tile.x = tile.x
+	lower_tile.y = tile.y + 1
+	if tile.y % 2 != 0:
+		lower_tile.x += 1
+	
+	# the left and bottom vertices depend on whether the y coordinate is odd or even as with the flat tile function
+	if tile.y % 2 == 0:
+		v1 = Vector3( (tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		v4 = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	else:
+		v1 = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		v4 = Vector3( 32+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	
+	# the left and bottom vertices depend on whether the y coordinate is odd or even as with the flat tile function
+	if lower_tile.y % 2 == 0:
+		v2 = Vector3( (lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # top (copied from flat left)
+		v3 = Vector3( 16+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 16+((lower_tile[1])*8) ) # right (copied from flat bottom)
+	else:
+		v2 = Vector3( 16+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # top (copied from flat left)
+		v3 = Vector3( 32+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 16+((lower_tile[1])*8) ) # right (copied from flat bottom)
+	
+	var a = vertices.find(v1)
+	if a == -1:
+		vertices.append(v1)
+	
+	a = vertices.find(v2)
+	if a == -1:
+		vertices.append(v2)
+	
+	a = vertices.find(v3)
+	if a == -1:
+		vertices.append(v3)
+		
+	a = vertices.find(v4)
+	if a == -1:
+		vertices.append(v4)
+	
+	mesh.set_vertices(vertices)
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v2), vertices.find(v3)]))
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v3), vertices.find(v4)]))
+
+
+
+func add_se_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
+	# this funtion is similar to the above with a few chnages
+	var vertices:PackedVector3Array = mesh.get_vertices()
+	
+	var v1:Vector3
+	var v2:Vector3
+	var v3:Vector3
+	var v4:Vector3
+	
+	# the right and bottom vertices of this tile will be in the same position as the top and left vertices of the tile
+	# this ramp connects to, so we find the tile that this ramp connects to on the lower layer
+	var lower_tile = Vector2i()
+	lower_tile.x = tile.x
+	lower_tile.y = tile.y + 3
+	if tile.y % 2 != 0:
+		lower_tile.x += 1
+	
+	# the top and left vertices depend on whether the y coordinate is odd or even as with the flat tile function
+	if tile.y % 2 == 0:
+		v1 = Vector3( (tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		v2 = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, ((tile[1])*8) ) # top
+	else:
+		v1 = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		v2 = Vector3( 32+(tile[0]*32), layer*LAYER_HEIGHT, ((tile[1])*8) ) # top
+	
+	# the right and bottom vertices depend on whether the lower tile is odd or even
+	if lower_tile.y % 2 == 0:
+		v3 = Vector3( 16+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, ((lower_tile[1])*8) ) # right (copied from flat top)
+		v4 = Vector3( (lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # bottom (copied from flat left)
+	else:
+		v3 = Vector3( 32+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, ((lower_tile[1])*8) ) # right (copied from flat top)
+		v4 = Vector3( 16+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) )  # bottom (copied from flat left)
+	
+	var a = vertices.find(v1)
+	if a == -1:
+		vertices.append(v1)
+	
+	a = vertices.find(v2)
+	if a == -1:
+		vertices.append(v2)
+	
+	a = vertices.find(v3)
+	if a == -1:
+		vertices.append(v3)
+		
+	a = vertices.find(v4)
+	if a == -1:
+		vertices.append(v4)
+	
+	mesh.set_vertices(vertices)
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v2), vertices.find(v3)]))
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v3), vertices.find(v4)]))
+
+
 func add_sw_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
 	# this funtion is similar to the above with a few chnages
 	var vertices:PackedVector3Array = mesh.get_vertices()
@@ -171,6 +292,61 @@ func add_sw_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
 	else:
 		v1 = Vector3( 32+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, ((lower_tile[1])*8) ) # left (copied from flat top)
 		v4 = Vector3( 16+((lower_tile[0]+1)*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # bottom copied from flat right)
+	
+	var a = vertices.find(v1)
+	if a == -1:
+		vertices.append(v1)
+	
+	a = vertices.find(v2)
+	if a == -1:
+		vertices.append(v2)
+	
+	a = vertices.find(v3)
+	if a == -1:
+		vertices.append(v3)
+		
+	a = vertices.find(v4)
+	if a == -1:
+		vertices.append(v4)
+	
+	mesh.set_vertices(vertices)
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v2), vertices.find(v3)]))
+	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v3), vertices.find(v4)]))
+
+
+func add_nw_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
+	# this funtion is similar to the above with a few chnages
+	var vertices:PackedVector3Array = mesh.get_vertices()
+	
+	var v1:Vector3
+	var v2:Vector3
+	var v3:Vector3
+	var v4:Vector3
+	
+	# the left and bottom vertices of this tile will be in the same position as the top and right vertices of the tile
+	# this ramp connects to, so we find the tile that this ramp connects to on the lower layer
+	var lower_tile = Vector2i()
+	lower_tile.x = tile.x
+	lower_tile.y = tile.y + 1
+	if tile.y % 2 == 0:
+		lower_tile.x -= 1
+	
+	# the right and bottom vertices depend on whether the y coordinate is odd or even as with the flat tile function
+	if tile.y % 2 == 0:
+		v3 = Vector3( ((tile[0]+1)*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # right
+		v4 = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	else:
+		v3 = Vector3( 16+((tile[0]+1)*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # right
+		v4 = Vector3( 32+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	
+	# the left and top vertices depend on whether the lower tile is odd of even
+	# l = b, t = r
+	if lower_tile.y % 2 == 0:
+		v1 = Vector3( 16+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 16+((lower_tile[1])*8) ) # left (copied from flat bottom)
+		v2 = Vector3( ((lower_tile[0]+1)*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # top (copied from flat right)
+	else:
+		v1 = Vector3( 32+(lower_tile[0]*32), (layer-1)*LAYER_HEIGHT, 16+((lower_tile[1])*8) ) # left (copied from flat bottom)
+		v2 = Vector3( 16+((lower_tile[0]+1)*32), (layer-1)*LAYER_HEIGHT, 8+((lower_tile[1])*8) ) # top (copied from flat right)
 	
 	var a = vertices.find(v1)
 	if a == -1:
