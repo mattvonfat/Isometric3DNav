@@ -1,5 +1,7 @@
 extends Node2D
 
+# these are the values that are defined in the custom data layer ("tile_type") of the tileset
+# tells the code which function is used to draw the nav mesh for that tile
 enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
 
 @onready var tilemap:TileMap = $TileMap
@@ -14,14 +16,13 @@ var nav_map # navigation map that we will create
 
 func _ready():
 	generate_nav_mesh()
-	cat.map = nav_map
 
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.pressed == true:
 			var global_mouse = get_global_mouse_position()
 			var clicked_tile = tilemap.local_to_map(global_mouse) # map coordinate of tile
-			print(global_mouse)
+			
 			# go through the layers from top to bottom until we find a layer which has a tile at the clicked position
 			for layer_id in range(layer_count-1, -1, -1):
 				if map_layer_collection[layer_id].has(clicked_tile):

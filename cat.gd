@@ -9,8 +9,6 @@ var has_target:bool = false
 var cat_vertical = 0 # this is the current vertical position of the cat
 var target_vertical # this will be the vertical position of the target position
 
-var map # stored the RID of the navigation map
-
 func set_path(new_path:PackedVector3Array):
 	path = new_path
 	if path.size() > 0:
@@ -21,8 +19,6 @@ func set_path(new_path:PackedVector3Array):
 
 func _physics_process(_delta):
 	if has_target:
-		#z_index = ceil(cat_vertical/16)
-		
 		# see if we have reached the target - I just guessed at 2 being ok
 		if position.distance_to(target) < 2:
 			# check if there are more points in the path

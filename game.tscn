@@ -76,7 +76,6 @@ custom_data_layer_0/type = 2
 sources/1 = SubResource("TileSetAtlasSource_3ubux")
 
 [node name="Game" type="Node2D"]
-position = Vector2(9, -25)
 script = ExtResource("1_6lrtb")
 
 [node name="TileMap" type="TileMap" parent="."]
@@ -107,8 +106,8 @@ layer_4/z_index = 4
 layer_4/navigation_enabled = false
 layer_4/tile_data = PackedInt32Array(-458761, 131073, 1, -524298, 131073, 1, -589834, 131073, 1, -655371, 131073, 1, -393226, 1, 0, -458762, 1, 0, -524299, 1, 0, -589835, 1, 0, -524300, 1, 0, -458764, 1, 0, -393229, 1, 0, -327693, 1, 0, -262158, 1, 0, -196621, 1, 0, -131086, 1, 0, -65550, 1, 0, -196622, 1, 0, -131087, 1, 0, -14, 1, 0, 65523, 1, 0, -327690, 1, 0, -262155, 1, 0, -196619, 1, 0, -131084, 1, 0, -65548, 1, 0, -13, 1, 0, -458763, 1, 0, -393227, 1, 0, -327691, 1, 0, -262156, 1, 0, -196620, 1, 0, -131085, 1, 0, -65549, 1, 0, -262157, 1, 0, -327692, 1, 0, -393228, 1, 0, -65551, 196609, 0, -15, 196609, 0, 65522, 196609, 0, 131058, 196609, 0)
 
-[node name="Camera2D" type="Camera2D" parent="."]
-
 [node name="Cat" parent="." instance=ExtResource("2_48ump")]
 z_index = 10
-position = Vector2(80, 39)
+position = Vector2(-71, 44)
+
+[node name="Camera2D" type="Camera2D" parent="."]
