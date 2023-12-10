@@ -1,7 +1,5 @@
 extends Node2D
 
-# these are the values that are defined in the custom data layer ("tile_type") of the tileset
-# tells the code which function is used to draw the nav mesh for that tile
 enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
 
 @onready var tilemap:TileMap = $TileMap
