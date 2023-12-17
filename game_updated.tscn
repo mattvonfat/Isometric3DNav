@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://lk8dhah4c6ig"]
+
+[ext_resource type="Script" path="res://game_updated.gd" id="1_evdt2"]
+[ext_resource type="PackedScene" uid="uid://xdfhbf1d8xvs" path="res://custom_tile_map.tscn" id="2_3cpx8"]
+[ext_resource type="PackedScene" uid="uid://c4n7gcsd4euex" path="res://cat.tscn" id="3_vmxwj"]
+
+[node name="GameUpdated" type="Node2D"]
+script = ExtResource("1_evdt2")
+
+[node name="CustomTileMap" parent="." instance=ExtResource("2_3cpx8")]
+
+[node name="Cat" parent="." instance=ExtResource("3_vmxwj")]
+position = Vector2(0, -128)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Label" type="Label" parent="."]
+offset_left = -274.0
+offset_top = -166.0
+offset_right = -234.0
+offset_bottom = -143.0
+text = "j"

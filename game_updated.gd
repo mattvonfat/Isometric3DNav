@@ -4,7 +4,7 @@ extends Node2D
 # tells the code which function is used to draw the nav mesh for that tile
 enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
 
-@onready var tilemap:TileMap = $TileMap
+@onready var tilemap = $CustomTileMap
 @onready var cat = $Cat
 
 const LAYER_HEIGHT:int = 16
@@ -19,13 +19,16 @@ func _ready():
 	cat.map = nav_map
 	cat.game = self
 	$CustomTileMap.set_cat(cat)
+	cat.tilemap = $CustomTileMap
+	$Label.set_text("4")
+	tilemap.label = $Label
 
 
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == 1 and event.pressed == true:
 			var global_mouse = get_global_mouse_position()
-			var clicked_tile = tilemap.local_to_map(global_mouse) # map coordinate of tile
+			var clicked_tile = tilemap.tilemap.local_to_map(global_mouse) # map coordinate of tile
 			
 			# go through the layers from top to bottom until we find a layer which has a tile at the clicked position
 			for layer_id in range(layer_count-1, -1, -1):
@@ -38,19 +41,19 @@ func _input(event):
 					var path:PackedVector3Array = NavigationServer3D.map_get_path(nav_map, character_pos3D, clicked_pos3D, true)
 					# pass the path to the character
 					cat.set_path(path)
-					print(cat.z_index)
+					tilemap.queue_redraw()
 					break
 
 
 func generate_nav_mesh():
 	var new_mesh:NavigationMesh = NavigationMesh.new()
 	
-	layer_count = tilemap.get_layers_count()
+	layer_count = tilemap.tilemap.get_layers_count()
 	map_layer_collection = {}
 	
 	# get the tile map data for each layer and store in map_collection_layer
 	for layer_id in range(layer_count):
-		map_layer_collection[layer_id] = tilemap.get_used_cells(layer_id)
+		map_layer_collection[layer_id] = tilemap.tilemap.get_used_cells(layer_id)
 	print(map_layer_collection.keys())
 	
 	for layer_id in range(layer_count):
@@ -68,7 +71,7 @@ func generate_nav_mesh():
 					continue
 			
 			# get the "tile_type" of the current tile so we know how to create it
-			var tile_data = tilemap.get_cell_tile_data(layer_id, tile)
+			var tile_data = tilemap.tilemap.get_cell_tile_data(layer_id, tile)
 			var tile_type = tile_data.get_custom_data("tile_type")
 			
 			match tile_type:

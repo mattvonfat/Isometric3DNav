@@ -1,82 +1,19 @@
-[gd_scene load_steps=13 format=3 uid="uid://c4n7gcsd4euex"]
+[gd_scene load_steps=4 format=3 uid="uid://c4n7gcsd4euex"]
 
 [ext_resource type="Script" path="res://cat.gd" id="1_na31m"]
-[ext_resource type="Texture2D" uid="uid://ba0pyeby57kol" path="res://resources/images/cat-sprite-sheet.png" id="2_u56jn"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_o7670"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(0, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_f13y8"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(32, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_2re1j"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(64, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_unb22"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(96, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_pk7oo"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(128, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_rj8if"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(160, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_innhx"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(192, 160, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_hq754"]
-atlas = ExtResource("2_u56jn")
-region = Rect2(224, 160, 32, 32)
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_h540q"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_o7670")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_f13y8")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_2re1j")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_unb22")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pk7oo")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_rj8if")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_innhx")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_hq754")
-}],
-"loop": true,
-"name": &"default",
-"speed": 5.0
-}]
+[ext_resource type="Texture2D" uid="uid://bymlvy3jtso71" path="res://resources/images/char.png" id="2_y1dcw"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pb7rt"]
 size = Vector2(13, 11.75)
 
 [node name="Cat" type="CharacterBody2D"]
+y_sort_enabled = true
 script = ExtResource("1_na31m")
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -16)
-sprite_frames = SubResource("SpriteFrames_h540q")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0.5, -6.125)
 shape = SubResource("RectangleShape2D_pb7rt")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
+texture = ExtResource("2_y1dcw")
