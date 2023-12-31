@@ -10,13 +10,13 @@ script = ExtResource("1_evdt2")
 [node name="CustomTileMap" parent="." instance=ExtResource("2_3cpx8")]
 
 [node name="Cat" parent="." instance=ExtResource("3_vmxwj")]
-position = Vector2(0, -128)
+position = Vector2(23, 44)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
 [node name="Label" type="Label" parent="."]
-offset_left = -274.0
-offset_top = -166.0
-offset_right = -234.0
-offset_bottom = -143.0
+offset_left = -566.0
+offset_top = -313.0
+offset_right = -303.0
+offset_bottom = -275.0
 text = "j"

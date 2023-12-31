@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://c4n7gcsd4euex"]
 
 [ext_resource type="Script" path="res://cat.gd" id="1_na31m"]
-[ext_resource type="Texture2D" uid="uid://bymlvy3jtso71" path="res://resources/images/char.png" id="2_y1dcw"]
+[ext_resource type="Texture2D" uid="uid://dil4qmrh6d4os" path="res://resources/images/cat.png" id="2_yigp0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pb7rt"]
 size = Vector2(13, 11.75)
@@ -15,5 +15,6 @@ position = Vector2(0.5, -6.125)
 shape = SubResource("RectangleShape2D_pb7rt")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(0, -16)
-texture = ExtResource("2_y1dcw")
+position = Vector2(0, -8)
+texture = ExtResource("2_yigp0")
+region_rect = Rect2(7.78619, 145.974, 16.963, 14.6469)

@@ -48,6 +48,9 @@ func _physics_process(_delta):
 		tilemap.queue_redraw()
 		#test()
 
+func get_layer():
+	return floor(cat_vertical/16.0)+1
+
 func get_cat_vertical():
 	var cat_layer = ceil(cat_vertical/16.0)
 	var cat_tile = game.tilemap.local_to_map(position)

@@ -3,6 +3,7 @@ extends Node2D
 # these are the values that are defined in the custom data layer ("tile_type") of the tileset
 # tells the code which function is used to draw the nav mesh for that tile
 enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
+enum { LEFT_VERTEX=0, TOP_VERTEX, RIGHT_VERTEX, BOTTOM_VERTEX }
 
 @onready var tilemap = $CustomTileMap
 @onready var cat = $Cat
@@ -14,14 +15,20 @@ var map_layer_collection:Dictionary # stores the tile data for each layer
 
 var nav_map # navigation map that we will create
 
+var adjacent_tiles_even = [ Vector2i(-1,0), Vector2i(-1,-1), Vector2i(0,-2), Vector2i(0,-1), Vector2i(1,0), Vector2i(0,1), Vector2i(0,2), Vector2i(-1,1) ]
+var adjacent_tiles_odd = [ Vector2i(-1,0), Vector2i(0,-1), Vector2i(0,-2), Vector2i(-1,-1), Vector2i(1,0), Vector2i(1,1), Vector2i(0,2), Vector2i(0,1) ]
+var adjacent_tiles = [adjacent_tiles_even, adjacent_tiles_odd]
+var side_options = [ [1,4], [1], [1,2], [2], [2,3], [3], [3,4], [4] ]
+
 func _ready():
 	generate_nav_mesh()
 	cat.map = nav_map
 	cat.game = self
 	$CustomTileMap.set_cat(cat)
 	cat.tilemap = $CustomTileMap
-	$Label.set_text("4")
+	$Label.set_text(tilemap.steps[4])
 	tilemap.label = $Label
+
 
 
 func _input(event):
@@ -155,8 +162,69 @@ func add_flat_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
 	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v2), vertices.find(v3)]))
 	mesh.add_polygon(PackedInt32Array([vertices.find(v1), vertices.find(v3), vertices.find(v4)]))
 
+## test - not currently used
+func create_tile_polygon(tile:Vector2i, layer:int, mesh:NavigationMesh):
+		# get the array of vertices from the nav mesh
+	var vertices:PackedVector3Array = mesh.get_vertices()
+	
+	var tile_coordinates:PackedVector3Array
+	tile_coordinates.resize(4)
+	
+	# because of the way the isometric tile map is laid out, the position of the tiles can vary depending on
+	# whether the coords are odd or even
+	if tile.y % 2 == 0:
+		tile_coordinates[LEFT_VERTEX] = Vector3( (tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		tile_coordinates[TOP_VERTEX] = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, ((tile[1])*8) ) # top
+		tile_coordinates[RIGHT_VERTEX] = Vector3( ((tile[0]+1)*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # right
+		tile_coordinates[BOTTOM_VERTEX] = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	else:
+		tile_coordinates[LEFT_VERTEX] = Vector3( 16+(tile[0]*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # left
+		tile_coordinates[TOP_VERTEX] = Vector3( 32+(tile[0]*32), layer*LAYER_HEIGHT, ((tile[1])*8) ) # top
+		tile_coordinates[RIGHT_VERTEX] = Vector3( 16+((tile[0]+1)*32), layer*LAYER_HEIGHT, 8+((tile[1])*8) ) # right
+		tile_coordinates[BOTTOM_VERTEX] = Vector3( 32+(tile[0]*32), layer*LAYER_HEIGHT, 16+((tile[1])*8) ) # bottom
+	
+	# this checks if the vertices already exist in the nav mesh vertices array
+	# if the don't exist then we add them
+	for vertex in tile_coordinates:
+		if vertices.find(vertex) == -1:
+			vertices.append(vertex)
+			# TODO - can save vertex indexes here for use when building polygon
+	# we set the updated vertices array to the nav mesh
+	mesh.set_vertices(vertices)
+	# we now add the two polygons that make up this tile, they are defined using the indexes of the vertices
+	# so we find the index for each value we want to use from the vertcies array
+	mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[TOP_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX])]))
+	mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX]), vertices.find(tile_coordinates[BOTTOM_VERTEX])]))
 
 
+func calculate_tile_coords_flat():
+	pass
+
+
+func get_edge_margins(tile:Vector2i, layer:int):
+	var edge_indents:Array[bool]
+	for i in range(4):
+		edge_indents.append(false)
+	
+	var tile_array:int = tile.y % 2
+	
+	for i in range(adjacent_tiles[tile_array].size()):
+		var test_tile = tile + adjacent_tiles[tile_array][i]
+		if map_layer_collection[layer].has(test_tile):
+			#tile exists so check if it is blocked
+			if layer+1 < layer_count:
+				test_tile.y -= 2
+				if map_layer_collection[layer+1].has(test_tile):
+					# has a sstacked tile so need to add buffer
+					for j in side_options[i]:
+						edge_indents[j] = true
+		
+		else:
+			# tile doesn't exist so need to add buffer
+			for j in side_options[i]:
+				edge_indents[j] = true
+	
+	return edge_indents
 
 
 func add_ne_ramp_polygons(tile:Vector2i, layer:int, mesh:NavigationMesh):
