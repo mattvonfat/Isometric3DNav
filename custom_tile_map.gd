@@ -1,6 +1,6 @@
 extends Node2D
 
-@onready var tilemap:TileMap = $TileMap
+@onready var tilemap:TileMap = $TileMap3
 
 var steps = [ "", "Draw base layer only.", "Draw base layer and area behind character.", "Draw base layer, area behind character, and character.", "Draw everything." ]
 

@@ -1,8 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://q222um62v2gl"]
+[gd_scene load_steps=3 format=3 uid="uid://xw34t445eeeq"]
 
-[ext_resource type="NavigationMesh" uid="uid://cxb4wefhegt1d" path="res://nav_mesh.tres" id="1_dx7mk"]
+[ext_resource type="NavigationMesh" path="res://nav_mesh.tres" id="1_dx7mk"]
+[ext_resource type="NavigationMesh" path="res://nav_mesh_new.tres" id="2_vdntf"]
 
 [node name="NavMeshTest" type="Node3D"]
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+visible = false
 navigation_mesh = ExtResource("1_dx7mk")
+
+[node name="NavigationRegion3D2" type="NavigationRegion3D" parent="."]
+visible = false
+navigation_mesh = ExtResource("2_vdntf")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
