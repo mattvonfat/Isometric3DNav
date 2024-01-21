@@ -5,7 +5,32 @@ extends Node2D
 enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
 enum { LEFT_VERTEX=0, TOP_VERTEX, RIGHT_VERTEX, BOTTOM_VERTEX }
 
-
+class mVector3:
+	var x:float:
+		get:
+			return snapped(x, decimals)
+		set(value):
+			x = value
+	var y:float:
+		get:
+			return snapped(x, decimals)
+		set(value):
+			y = value
+	var z:float:
+		get:
+			return snapped(x, decimals)
+		set(value):
+			z = value
+	
+	var decimals:float = 0.000001
+	
+	func _init(_x:float=0.0, _y:float=0.0, _z:float=0.0):
+		x = _x
+		y = _y
+		z = _z
+	
+	func _to_string():
+		return "(%s, %s, %s)" % [snapped(x, decimals), snapped(y, decimals), snapped(z, decimals)]
 
 
 @onready var tilemap = $CustomTileMap
@@ -17,9 +42,6 @@ var layer_count:int # number of layers in the tile map
 var map_layer_collection:Dictionary # stores the tile data for each layer
 
 var nav_map # navigation map that we will create
-
-
-
 
 
 
@@ -38,6 +60,7 @@ enum { N_CORNER=0, S_CORNER, E_CORNER, W_CORNER }
 var corner_vectors = [  Vector2i(0,-2), Vector2i(0,2), Vector2i(1,0), Vector2i(-1,0) ] # N, S, E, W
 
 func _ready():
+	#print(Vector3(1.123456789, 10.123456789, 100.123456789))
 	generate_nav_mesh()
 	cat.map = nav_map
 	cat.game = self
@@ -473,9 +496,8 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 	var tile_vertices:PackedVector3Array = tile_data["vertices"]
 	var tile_directions:Array[Vector2i] = tile_data["directions"]
 	
-	print("\nNEW TRIANGLE")
-	print(tile_vertices)
-	print("")
+	#print("\nNEW TRIANGLE")
+	#print(tile_vertices)
 	
 	var vertex_count:int = tile_vertices.size()
 	
@@ -489,67 +511,67 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 	
 	for n:int in range(vertex_count):
 		var vertex_1_id:int = n
-		var vertex_2_id:int = n+1
-		if vertex_2_id >= vertex_count:
-			vertex_2_id -= vertex_count
 		
-		# !!!! - FIRST EDGES ARE ADDED AT START SO NOT CURRENTLY CHECKING THE FIRST EDGE - !!!!
-		# !!!! - SHOULDN'T AFFECT THE ALGORITHM BUT WANT TO KEEP THIS IN CASE I WANT TO REVERT - !!!!
-		# if the first edge already exists then we can skip this vertex
-		# only need to check this for the first edge of the triangle as other edges can share with other triangles
-		#if edges.has(Vector2i(vertex_1_id, vertex_2_id)):
-		#	continue
-		
-		var triangle_completed:bool = false # lets us know whether we found a valid triangle
-		var triangle:PackedInt32Array
-		
-		print("Test triangles:")
-		
-		# loop through every remaining vertex to see if it makes a valid triangle
-		for i:int in range(vertex_count-2):
-			# calculate the index of the vertex_3 we want to check and handle any overflow
-			var vertex_3_id:int = (n+2) + i
-			if vertex_3_id >= vertex_count:
-				vertex_3_id -= vertex_count
+		for j:int in range(vertex_count-1):
+			var vertex_2_id:int = n+1 + j
+			if vertex_2_id >= vertex_count:
+				vertex_2_id -= vertex_count
 			
-			# make our test triangle
-			triangle = [vertex_1_id, vertex_2_id, vertex_3_id]
-			print("Triangle test: %s" % triangle)
-			# check if the triangle already exists - if so then we move on to the next vertex_1
-			# as this one has already been accounted for
-			var exists:bool = false
-			for t in triangles:
-				if t.has(triangle[0]) and t.has(triangle[1]) and t.has(triangle[2]):
-					print("Exists!\n")
-					exists = true
+			# !!!! - FIRST EDGES ARE ADDED AT START SO NOT CURRENTLY CHECKING THE FIRST EDGE - !!!!
+			# !!!! - SHOULDN'T AFFECT THE ALGORITHM BUT WANT TO KEEP THIS IN CASE I WANT TO REVERT - !!!!
+			# if the first edge already exists then we can skip this vertex
+			# only need to check this for the first edge of the triangle as other edges can share with other triangles
+			#if edges.has(Vector2i(vertex_1_id, vertex_2_id)):
+			#	continue
 			
-			if exists == true:
-				break
+			var triangle_completed:bool = false # lets us know whether we found a valid triangle
+			var triangle:PackedInt32Array
 			
-			# triangle doesn't exist yet so check if it is valid
-			var triangle_valid = test_triangle(triangle, tile_vertices, tile_directions, edges)
-			
-			# if triangle is valid exit the loop now, otherwise we move on to the next possible vertex_3
-			if triangle_valid:
-				# add the new adges
-				if not edges.has(Vector2i(triangle[0], triangle[1])) and not edges.has(Vector2i(triangle[1],triangle[0])):
-					edges.append(Vector2i(triangle[0], triangle[1]))
-				if not edges.has(Vector2i(triangle[1], triangle[2])) and not edges.has(Vector2i(triangle[2],triangle[1])):
-					edges.append(Vector2i(triangle[1], triangle[2]))
-				if not edges.has(Vector2i(triangle[2], triangle[0])) and not edges.has(Vector2i(triangle[0],triangle[2])):
-					edges.append(Vector2i(triangle[2], triangle[0]))
+			# loop through every remaining vertex to see if it makes a valid triangle
+			for i:int in range(vertex_count-2):
+				# calculate the index of the vertex_3 we want to check and handle any overflow
+				var vertex_3_id:int = (vertex_2_id+1) + i
+				if vertex_3_id >= vertex_count:
+					vertex_3_id -= vertex_count
 				
-				triangle_completed = true
-				print("valid\n")
-				break
-			print("invalid\n")
-		
-		# check if we managed to make a triangle
-		# if so we add it to the list of triangles, if not then we can just do nothing and move on to the next vertex_1
-		if triangle_completed:
-			triangles.append(triangle)
+				if vertex_3_id == vertex_1_id:
+					break
+				
+				# make our test triangle
+				triangle = [vertex_1_id, vertex_2_id, vertex_3_id]
+				
+				# check if the triangle already exists - if so then we move on to the next vertex_1
+				# as this one has already been accounted for
+				var exists:bool = false
+				for t in triangles:
+					if t.has(triangle[0]) and t.has(triangle[1]) and t.has(triangle[2]):
+						exists = true
+				
+				if exists == true:
+					break
+				
+				# triangle doesn't exist yet so check if it is valid
+				var triangle_valid = test_triangle(triangle, tile_vertices, tile_directions, edges)
+				
+				# if triangle is valid exit the loop now, otherwise we move on to the next possible vertex_3
+				if triangle_valid:
+					# add the new adges
+					if not edges.has(Vector2i(triangle[0], triangle[1])) and not edges.has(Vector2i(triangle[1],triangle[0])):
+						edges.append(Vector2i(triangle[0], triangle[1]))
+					if not edges.has(Vector2i(triangle[1], triangle[2])) and not edges.has(Vector2i(triangle[2],triangle[1])):
+						edges.append(Vector2i(triangle[1], triangle[2]))
+					if not edges.has(Vector2i(triangle[2], triangle[0])) and not edges.has(Vector2i(triangle[0],triangle[2])):
+						edges.append(Vector2i(triangle[2], triangle[0]))
+					
+					triangle_completed = true
+					break
+			
+			# check if we managed to make a triangle
+			# if so we add it to the list of triangles, if not then we can just do nothing and move on to the next vertex_1
+			if triangle_completed:
+				triangles.append(triangle)
 	
-	print(triangles)
+	#print(triangles)
 	# we have now built our triangles so just send back the triangles array
 	return triangles
 
@@ -567,6 +589,17 @@ func test_triangle(triangle:PackedInt32Array, vertices:PackedVector3Array, direc
 	v3_point.y = vertices[triangle[2]].z
 	
 	# TESTS IF EDGES ARE OUTSIDE BOUNDARY
+	#v1->v2
+	var v1_dir:Vector2i = directions[triangle[0]]
+	if v1_dir.x != 0:
+		var x_change:float = v1_point.x - v2_point.x
+		if is_zero_approx(x_change):
+			return false
+	if v1_dir.y != 0:
+		var y_change:float = v1_point.y - v2_point.y
+		if is_zero_approx(y_change):
+			return false
+	
 	#v2->v3
 	var v2_dir:Vector2i = directions[triangle[1]]
 	if v2_dir.x != 0:
@@ -589,6 +622,8 @@ func test_triangle(triangle:PackedInt32Array, vertices:PackedVector3Array, direc
 		if is_zero_approx(y_change):
 			return false
 	
+	var debug = false
+	
 	# TESTS IF EDGES INTERSECT
 	for edge in edges:
 		var edge_point_1:Vector2
@@ -598,15 +633,22 @@ func test_triangle(triangle:PackedInt32Array, vertices:PackedVector3Array, direc
 		edge_point_1.y = vertices[edge[0]].z
 		edge_point_2.x = vertices[edge[1]].x
 		edge_point_2.y = vertices[edge[1]].z
+		if debug:
+				print(edge)
+		
+		# edge 1 - v1-v2
+		if edge != Vector2i(triangle[0], triangle[1]) and edge != Vector2i(triangle[1], triangle[0]):
+			if do_lines_intersect(v1_point, v2_point, edge_point_1, edge_point_2, debug):
+				return false
 		
 		# edge 2 - v2-v3
 		if edge != Vector2i(triangle[1], triangle[2]) and edge != Vector2i(triangle[2], triangle[1]):
-			if do_lines_intersect(v2_point, v3_point, edge_point_1, edge_point_2):
+			if do_lines_intersect(v2_point, v3_point, edge_point_1, edge_point_2, debug):
 				return false
 		
 		#edge 3 - v3-v1
 		if edge != Vector2i(triangle[2], triangle[0]) and edge != Vector2i(triangle[0], triangle[2]):
-			if do_lines_intersect(v3_point, v1_point, edge_point_1, edge_point_2):
+			if do_lines_intersect(v3_point, v1_point, edge_point_1, edge_point_2, debug):
 				return false
 		
 	return true
@@ -636,7 +678,13 @@ func do_lines_intersect(P1:Vector2, P2:Vector2, P3:Vector2, P4:Vector2, debug:bo
 	if debug:
 		print("I-X: %s" % intersect_x)
 		print("I-Y: %s" % intersect_y)
-	#print("AASSDAASD")
+	
+	if is_equal_approx(intersect_x, P1.x) and is_equal_approx(intersect_y, P1.y):
+		return false
+	
+	if is_equal_approx(intersect_x, P2.x) and is_equal_approx(intersect_y, P2.y):
+		return false
+	
 	# check if the intersect point is inside the line segments
 	if P1.x < P2.x:
 		if intersect_x < P1.x or intersect_x > P2.x:
@@ -676,7 +724,7 @@ func do_lines_intersect(P1:Vector2, P2:Vector2, P3:Vector2, P4:Vector2, debug:bo
 			return false
 	
 	# we got here so they should intersect
-	#print("%s, %s" % [intersect_x,intersect_y])
+	#print("within")
 	return true
 
 # creates a polygon for a tile in the nav mesh
