@@ -61,6 +61,8 @@ func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, n
 		# will be a wedge shape with 3 vertices
 		var vertex_1:Vector3 # same as just NW
 		vertex_1.x = tile.x * 32
+		if even == false:
+			vertex_1.x += 16
 		vertex_1.y = layer * LAYER_HEIGHT
 		vertex_1.z = (tile.y * 8) + 8
 		vertex_1.x += (sin(angle) * 3)
@@ -68,12 +70,16 @@ func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, n
 		
 		var vertex_2:Vector3 # same as both NW and SW
 		vertex_2.x = tile.x * 32
+		if even == false:
+			vertex_2.x += 16
 		vertex_2.y = layer * LAYER_HEIGHT
 		vertex_2.z = (tile.y * 8) + 8
-		vertex_1.x += (sin(angle) * 6)
+		vertex_2.x += (sin(angle) * 6)
 		
 		var vertex_3:Vector3 # same as just SW
 		vertex_3.x = tile.x * 32
+		if even == false:
+			vertex_3.x += 16
 		vertex_3.y = layer * LAYER_HEIGHT
 		vertex_3.z = (tile.y * 8) + 8
 		vertex_3.x += (sin(angle) * 3)
@@ -125,7 +131,7 @@ func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, n
 		vertex.z -= (cos(angle) * 3)
 	
 	vertices.append(vertex)
-	directions.append(Vector2(1,0))
+	directions.append(Vector2i(1,0))
 	
 	return { "vertices": vertices, "directions": directions }
 
@@ -138,6 +144,8 @@ func top_vertex_calc(tile:Vector2i, layer:int, even:bool, nw_margin:EdgeType, ne
 		# 3 vertices
 		var vertex_1:Vector3 # same as just ne
 		vertex_1.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_1.x += 16
 		vertex_1.y = layer * LAYER_HEIGHT
 		vertex_1.z = tile.y * 8
 		vertex_1.x -= (sin(angle) * 3)
@@ -145,12 +153,16 @@ func top_vertex_calc(tile:Vector2i, layer:int, even:bool, nw_margin:EdgeType, ne
 		
 		var vertex_2:Vector3 # same as both
 		vertex_2.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_2.x += 16
 		vertex_2.y = layer * LAYER_HEIGHT
 		vertex_2.z = tile.y * 8
 		vertex_2.z += (cos(angle) * 6)
 		
 		var vertex_3:Vector3 # same as just nw
 		vertex_3.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_3.x += 16
 		vertex_3.y = layer * LAYER_HEIGHT
 		vertex_3.z = tile.y * 8
 		vertex_3.x += (sin(angle) * 3)
@@ -201,7 +213,7 @@ func top_vertex_calc(tile:Vector2i, layer:int, even:bool, nw_margin:EdgeType, ne
 		vertex.z += (cos(angle) * 3)
 	
 	vertices.append(vertex)
-	directions.append(Vector2(0,1))
+	directions.append(Vector2i(0,1))
 	
 	return { "vertices": vertices, "directions": directions }
 
@@ -214,6 +226,8 @@ func right_vertex_calc(tile:Vector2i, layer:int, even:bool, ne_margin:EdgeType, 
 		# 3 vertices
 		var vertex_1:Vector3 # same as just se
 		vertex_1.x = (tile.x + 1) * 32
+		if even == false:
+			vertex_1.x += 16
 		vertex_1.y = layer * LAYER_HEIGHT
 		vertex_1.z = (tile.y * 8) + 8
 		vertex_1.x -= (sin(angle) * 3)
@@ -221,12 +235,16 @@ func right_vertex_calc(tile:Vector2i, layer:int, even:bool, ne_margin:EdgeType, 
 		
 		var vertex_2:Vector3 # same as both
 		vertex_2.x = (tile.x + 1) * 32
+		if even == false:
+			vertex_2.x += 16
 		vertex_2.y = layer * LAYER_HEIGHT
 		vertex_2.z = (tile.y * 8) + 8
 		vertex_2.x -= (sin(angle) * 6)
 		
 		var vertex_3:Vector3 # same as just ne
 		vertex_3.x = (tile.x + 1) * 32
+		if even == false:
+			vertex_3.x += 16
 		vertex_3.y = layer * LAYER_HEIGHT
 		vertex_3.z = (tile.y * 8) + 8
 		vertex_3.x -= (sin(angle) * 3)
@@ -278,7 +296,7 @@ func right_vertex_calc(tile:Vector2i, layer:int, even:bool, ne_margin:EdgeType, 
 		vertex.z -= (cos(angle) * 3)
 	
 	vertices.append(vertex)
-	directions.append(Vector2(-1,0))
+	directions.append(Vector2i(-1,0))
 	
 	return { "vertices": vertices, "directions": directions }
 
@@ -291,6 +309,8 @@ func bottom_vertex_calc(tile:Vector2i, layer:int, even:bool, se_margin:EdgeType,
 		# 3 vertices
 		var vertex_1:Vector3 # same as just sw
 		vertex_1.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_1.x += 16
 		vertex_1.y = layer * LAYER_HEIGHT
 		vertex_1.z = (tile.y * 8) + 16
 		vertex_1.x += (sin(angle) * 3)
@@ -298,12 +318,16 @@ func bottom_vertex_calc(tile:Vector2i, layer:int, even:bool, se_margin:EdgeType,
 		
 		var vertex_2:Vector3 # same as both
 		vertex_2.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_2.x += 16
 		vertex_2.y = layer * LAYER_HEIGHT
 		vertex_2.z = (tile.y * 8) + 16
 		vertex_2.z -= (cos(angle) * 6)
 		
 		var vertex_3:Vector3 # same as just se
 		vertex_3.x = (tile.x * 32) + 16
+		if even == false:
+			vertex_3.x += 16
 		vertex_3.y = layer * LAYER_HEIGHT
 		vertex_3.z = (tile.y * 8) + 16
 		vertex_3.x -= (sin(angle) * 3)
@@ -355,7 +379,7 @@ func bottom_vertex_calc(tile:Vector2i, layer:int, even:bool, se_margin:EdgeType,
 		vertex.z -= (cos(angle) * 3)
 	
 	vertices.append(vertex)
-	directions.append(Vector2(0,-1))
+	directions.append(Vector2i(0,-1))
 	
 	return { "vertices": vertices, "directions": directions }
 
@@ -425,7 +449,7 @@ func generate_nav_mesh():
 					add_nw_ramp_polygons(tile, layer_id, new_mesh)
 	
 	# save the nav mesh - only done so it can be viewed outside of the program for debug purposes
-	var save_result = ResourceSaver.save(new_mesh, "nav_mesh_new.tres", 1)
+	var save_result = ResourceSaver.save(new_mesh, "nav_mesh_experimental.tres", 1)
 	print("Nav mesh save result: %s" % save_result)
 	
 	# create a new navigation map
@@ -449,6 +473,10 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 	var tile_vertices:PackedVector3Array = tile_data["vertices"]
 	var tile_directions:Array[Vector2i] = tile_data["directions"]
 	
+	print("\nNEW TRIANGLE")
+	print(tile_vertices)
+	print("")
+	
 	var vertex_count:int = tile_vertices.size()
 	
 	# begin by adding all the outside edges - makes it easier to check if an edge is valid in certain situations
@@ -462,6 +490,8 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 	for n:int in range(vertex_count):
 		var vertex_1_id:int = n
 		var vertex_2_id:int = n+1
+		if vertex_2_id >= vertex_count:
+			vertex_2_id -= vertex_count
 		
 		# !!!! - FIRST EDGES ARE ADDED AT START SO NOT CURRENTLY CHECKING THE FIRST EDGE - !!!!
 		# !!!! - SHOULDN'T AFFECT THE ALGORITHM BUT WANT TO KEEP THIS IN CASE I WANT TO REVERT - !!!!
@@ -473,6 +503,8 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 		var triangle_completed:bool = false # lets us know whether we found a valid triangle
 		var triangle:PackedInt32Array
 		
+		print("Test triangles:")
+		
 		# loop through every remaining vertex to see if it makes a valid triangle
 		for i:int in range(vertex_count-2):
 			# calculate the index of the vertex_3 we want to check and handle any overflow
@@ -482,10 +514,16 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 			
 			# make our test triangle
 			triangle = [vertex_1_id, vertex_2_id, vertex_3_id]
-			
+			print("Triangle test: %s" % triangle)
 			# check if the triangle already exists - if so then we move on to the next vertex_1
 			# as this one has already been accounted for
-			if triangles.has(triangle):
+			var exists:bool = false
+			for t in triangles:
+				if t.has(triangle[0]) and t.has(triangle[1]) and t.has(triangle[2]):
+					print("Exists!\n")
+					exists = true
+			
+			if exists == true:
 				break
 			
 			# triangle doesn't exist yet so check if it is valid
@@ -493,38 +531,68 @@ func calculate_triangles(tile_data:Dictionary) -> Array[PackedInt32Array]:
 			
 			# if triangle is valid exit the loop now, otherwise we move on to the next possible vertex_3
 			if triangle_valid:
+				# add the new adges
+				if not edges.has(Vector2i(triangle[0], triangle[1])) and not edges.has(Vector2i(triangle[1],triangle[0])):
+					edges.append(Vector2i(triangle[0], triangle[1]))
+				if not edges.has(Vector2i(triangle[1], triangle[2])) and not edges.has(Vector2i(triangle[2],triangle[1])):
+					edges.append(Vector2i(triangle[1], triangle[2]))
+				if not edges.has(Vector2i(triangle[2], triangle[0])) and not edges.has(Vector2i(triangle[0],triangle[2])):
+					edges.append(Vector2i(triangle[2], triangle[0]))
+				
 				triangle_completed = true
+				print("valid\n")
 				break
+			print("invalid\n")
 		
 		# check if we managed to make a triangle
 		# if so we add it to the list of triangles, if not then we can just do nothing and move on to the next vertex_1
 		if triangle_completed:
 			triangles.append(triangle)
 	
+	print(triangles)
 	# we have now built our triangles so just send back the triangles array
 	return triangles
 
 # Tests if edges intersect and if edges go outside polygon
 func test_triangle(triangle:PackedInt32Array, vertices:PackedVector3Array, directions:Array[Vector2i], edges:Array[Vector2i]) -> bool:
-	var v1_point:Vector2i #v1
-	var v2_point:Vector2i #v2
-	var v3_point:Vector2i #v2
+	var v1_point:Vector2 #v1
+	var v2_point:Vector2 #v2
+	var v3_point:Vector2 #v2
 	
 	v1_point.x = vertices[triangle[0]].x
-	v1_point.x = vertices[triangle[0]].y
+	v1_point.y = vertices[triangle[0]].z
 	v2_point.x = vertices[triangle[1]].x
-	v2_point.x = vertices[triangle[1]].y
+	v2_point.y = vertices[triangle[1]].z
 	v3_point.x = vertices[triangle[2]].x
-	v3_point.x = vertices[triangle[2]].y
+	v3_point.y = vertices[triangle[2]].z
 	
 	# TESTS IF EDGES ARE OUTSIDE BOUNDARY
+	#v2->v3
+	var v2_dir:Vector2i = directions[triangle[1]]
+	if v2_dir.x != 0:
+		var x_change:float = v2_point.x - v3_point.x
+		if is_zero_approx(x_change):
+			return false
+	if v2_dir.y != 0:
+		var y_change:float = v2_point.y - v3_point.y
+		if is_zero_approx(y_change):
+			return false
 	
-	
+	#v3->v1
+	var v3_dir:Vector2i = directions[triangle[2]]
+	if v3_dir.x != 0:
+		var x_change:float = v3_point.x - v1_point.x
+		if is_zero_approx(x_change):
+			return false
+	if v3_dir.y != 0:
+		var y_change:float = v3_point.y - v1_point.y
+		if is_zero_approx(y_change):
+			return false
 	
 	# TESTS IF EDGES INTERSECT
 	for edge in edges:
-		var edge_point_1:Vector2i
-		var edge_point_2:Vector2i
+		var edge_point_1:Vector2
+		var edge_point_2:Vector2
 		
 		edge_point_1.x = vertices[edge[0]].x
 		edge_point_1.y = vertices[edge[0]].z
@@ -532,64 +600,83 @@ func test_triangle(triangle:PackedInt32Array, vertices:PackedVector3Array, direc
 		edge_point_2.y = vertices[edge[1]].z
 		
 		# edge 2 - v2-v3
-		if edge != Vector2i(triangle[1], triangle[2]):
+		if edge != Vector2i(triangle[1], triangle[2]) and edge != Vector2i(triangle[2], triangle[1]):
 			if do_lines_intersect(v2_point, v3_point, edge_point_1, edge_point_2):
 				return false
 		
 		#edge 3 - v3-v1
-		if edge != Vector2i(triangle[2], triangle[0]):
+		if edge != Vector2i(triangle[2], triangle[0]) and edge != Vector2i(triangle[0], triangle[2]):
 			if do_lines_intersect(v3_point, v1_point, edge_point_1, edge_point_2):
 				return false
 		
 	return true
 
 # Checks if two lines (L1 & L2) intersect - L1 is defined by the points P1 and P2, L2 is defined by points P3 and P4
-func do_lines_intersect(P1:Vector2i, P2:Vector2i, P3:Vector2i, P4:Vector2i) -> bool:
-	var denominator:int = ((P1.x - P2.x) * (P3.y - P4.y)) - ((P1.y - P2.y) * (P3.x - P4.x))
+func do_lines_intersect(P1:Vector2, P2:Vector2, P3:Vector2, P4:Vector2, debug:bool=false) -> bool:
+	var denominator:float = ((P1.x - P2.x) * (P3.y - P4.y)) - ((P1.y - P2.y) * (P3.x - P4.x))
 	
-	if denominator == 0:
+	if debug:
+		print("Denom: %s" % denominator)
+	
+	if is_zero_approx(denominator):
 		if ((P1.x == P3.x) and (P2.x == P3.x)) or ((P1.y == P3.y) and (P2.y == P3.y)):
 			# lines are coincident 
 			return true
 		# lines are parallel
 		return false
 	
-	var numerator_x:int = ((P1.x*P2.y - P1.y*P2.x)*(P3.x-P4.x)) - ((P1.x-P2.x)*(P3.x*P4.y - P3.y*P4.x))
-	var numerator_y:int = ((P1.x*P2.y - P1.y*P2.x)*(P3.y-P4.y)) - ((P1.y-P2.y)*(P3.x*P4.y - P3.y*P4.x))
+	if debug:
+		print("Denom passed.")
 	
-	var intersect_x:int = numerator_x / denominator
-	var intersect_y:int = numerator_y / denominator
+	var numerator_x:float = ((P1.x*P2.y - P1.y*P2.x)*(P3.x-P4.x)) - ((P1.x-P2.x)*(P3.x*P4.y - P3.y*P4.x))
+	var numerator_y:float = ((P1.x*P2.y - P1.y*P2.x)*(P3.y-P4.y)) - ((P1.y-P2.y)*(P3.x*P4.y - P3.y*P4.x))
 	
+	var intersect_x:float = snapped(numerator_x / denominator, 0.00001)
+	var intersect_y:float = snapped(numerator_y / denominator, 0.00001)
+	if debug:
+		print("I-X: %s" % intersect_x)
+		print("I-Y: %s" % intersect_y)
+	#print("AASSDAASD")
 	# check if the intersect point is inside the line segments
 	if P1.x < P2.x:
 		if intersect_x < P1.x or intersect_x > P2.x:
+			#print("i1")
 			return false
-	else:
+	elif P1.x > P2.x:
 		if intersect_x > P1.x or intersect_x < P2.x:
+			#print("i2")
 			return false
+
 	
 	if P3.x < P4.x:
 		if intersect_x < P3.x or intersect_x > P4.x:
+			#print("i3")
 			return false
-	else:
+	elif P3.x > P4.x:
 		if intersect_x > P3.x or intersect_x < P4.x:
+			#print("i4")
 			return false
 	
 	if P1.y < P2.y:
 		if intersect_y < P1.y or intersect_y > P2.y:
+			#print("i5")
 			return false
-	else:
+	elif P1.y > P2.y:
 		if intersect_y > P1.y or intersect_y < P2.y:
+			#print("i6")
 			return false
 	
 	if P3.y < P4.y:
 		if intersect_y < P3.y or intersect_y > P4.y:
+			#print("i7")
 			return false
-	else:
+	elif P3.y > P4.y:
 		if intersect_y > P3.y or intersect_y < P4.y:
+			#print("i8")
 			return false
 	
 	# we got here so they should intersect
+	#print("%s, %s" % [intersect_x,intersect_y])
 	return true
 
 # creates a polygon for a tile in the nav mesh
@@ -601,23 +688,37 @@ func create_tile_polygon(tile:Vector2i, layer:int, mesh:NavigationMesh) -> void:
 	var tile_vertices:PackedVector3Array = tile_data["vertices"]
 	var tile_directions:Array[Vector2i] = tile_data["directions"]
 	
-	# TODO: Need to calculate the edges/triangles for the vertices
-	calculate_triangles(tile_data)
+	
+	var triangles:Array[PackedInt32Array] = calculate_triangles(tile_data)
+	
+	var vertex_indices:Array
 	
 	# this checks if the vertices already exist in the nav mesh vertices array
 	# if they don't exist then we add them
-	for vertex in tile_coordinates:
-		if vertices.find(vertex) == -1:
+	for vertex in tile_vertices:
+		var vertex_index = vertices.find(vertex)
+		if vertex_index == -1:
+			# vertex doesn't exist so add it
+			vertex_indices.append(vertices.size())
 			vertices.append(vertex)
-
+		else:
+			vertex_indices.append(vertex_index)
 	
 	# we set the updated vertices array to the nav mesh
 	mesh.set_vertices(vertices)
 	
+	# add the triangles - make sure to use the indices stored in vertex_indices as they relate to the navmesh vertex list
+	for triangle in triangles:
+		var updated_triangle:PackedInt32Array
+		for index in triangle:
+			updated_triangle.append(vertex_indices[index])
+		mesh.add_polygon(updated_triangle)
+	
+	# !!!! - SUPERCEDED BUT WANT TO KEEP FOR FUTURE REFERENCE - !!!!
 	# we now add the two polygons that make up this tile, they are defined using the indexes of the vertices
 	# so we find the index for each value we want to use from the vertcies array
-	mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[TOP_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX])]))
-	mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX]), vertices.find(tile_coordinates[BOTTOM_VERTEX])]))
+	#mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[TOP_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX])]))
+	#mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX]), vertices.find(tile_coordinates[BOTTOM_VERTEX])]))
 
 
 func calculate_tile_coords_flat(tile:Vector2i, layer:int) -> Dictionary:
