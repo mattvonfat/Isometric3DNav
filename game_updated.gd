@@ -2,7 +2,7 @@ extends Node2D
 
 # these are the values that are defined in the custom data layer ("tile_type") of the tileset
 # tells the code which function is used to draw the nav mesh for that tile
-enum { TILE_FLAT=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_RAMP_NW=4 }
+
 enum { LEFT_VERTEX=0, TOP_VERTEX, RIGHT_VERTEX, BOTTOM_VERTEX }
 
 class mVector3:
@@ -32,7 +32,6 @@ class mVector3:
 	func _to_string():
 		return "(%s, %s, %s)" % [snapped(x, decimals), snapped(y, decimals), snapped(z, decimals)]
 
-
 @onready var tilemap = $CustomTileMap
 @onready var cat = $Cat
 
@@ -47,6 +46,11 @@ var nav_map # navigation map that we will create
 
 
 var corner_options = [ [0,3],  [0,1],  [1,2],  [2,3] ]
+
+
+var ramp_type = [[], [0, 2], [1, 3], [0, 2], [1, 3]]
+
+enum { TILE_RAMP_NW=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_FLAT=4 }
 
 ### HAPPYISH WITH:
 enum EdgeType { STANDARD, INDENTED }
@@ -77,12 +81,12 @@ func _ready():
 
 func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, nw_margin:EdgeType, corner_blocked:bool) -> Dictionary:
 	var angle = atan(2.0)
-	var vertices:PackedVector3Array
-	var directions:Array[Vector2i]
+	var vertices:PackedVector3Array = []
+	var directions:Array[Vector2i] = []
 	
 	if sw_margin == EdgeType.STANDARD and nw_margin == EdgeType.STANDARD and corner_blocked == true:
 		# will be a wedge shape with 3 vertices
-		var vertex_1:Vector3 # same as just NW
+		var vertex_1:Vector3 = Vector3.ZERO # same as just NW
 		vertex_1.x = tile.x * 32
 		if even == false:
 			vertex_1.x += 16
@@ -91,7 +95,7 @@ func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, n
 		vertex_1.x += (sin(angle) * 3)
 		vertex_1.z += (cos(angle) * 3)
 		
-		var vertex_2:Vector3 # same as both NW and SW
+		var vertex_2:Vector3 = Vector3.ZERO # same as both NW and SW
 		vertex_2.x = tile.x * 32
 		if even == false:
 			vertex_2.x += 16
@@ -99,7 +103,7 @@ func left_vertex_calc(tile:Vector2i, layer:int, even:bool, sw_margin:EdgeType, n
 		vertex_2.z = (tile.y * 8) + 8
 		vertex_2.x += (sin(angle) * 6)
 		
-		var vertex_3:Vector3 # same as just SW
+		var vertex_3:Vector3 = Vector3.ZERO # same as just SW
 		vertex_3.x = tile.x * 32
 		if even == false:
 			vertex_3.x += 16
@@ -456,20 +460,28 @@ func generate_nav_mesh():
 			var tile_type = tile_data.get_custom_data("tile_type")
 			
 			match tile_type:
-				0: #flat
+				TILE_FLAT: #flat
 					create_tile_polygon(tile, layer_id, new_mesh)
 				
-				1: # NE ramp
-					add_ne_ramp_polygons(tile, layer_id, new_mesh)
+				TILE_RAMP_NE: # NE ramp
+					print("\nNE")
+					print(tile)
+					create_ramp_polygon(tile, layer_id, new_mesh, TILE_RAMP_NE)
 				
-				2: # SE ramp
-					add_se_ramp_polygons(tile, layer_id, new_mesh)
+				TILE_RAMP_SE: # SE ramp
+					print("\nSE")
+					print(tile)
+					create_ramp_polygon(tile, layer_id, new_mesh, TILE_RAMP_SE)
 				
-				3: # SW ramp
-					add_sw_ramp_polygons(tile, layer_id, new_mesh)
+				TILE_RAMP_SW: # SW ramp
+					print("\nSW")
+					print(tile)
+					create_ramp_polygon(tile, layer_id, new_mesh, TILE_RAMP_SW)
 				
-				4: # NW ramp
-					add_nw_ramp_polygons(tile, layer_id, new_mesh)
+				TILE_RAMP_NW: # NW ramp
+					print("\nNW")
+					print(tile)
+					create_ramp_polygon(tile, layer_id, new_mesh, TILE_RAMP_NW)
 	
 	# save the nav mesh - only done so it can be viewed outside of the program for debug purposes
 	var save_result = ResourceSaver.save(new_mesh, "nav_mesh_experimental.tres", 1)
@@ -769,6 +781,147 @@ func create_tile_polygon(tile:Vector2i, layer:int, mesh:NavigationMesh) -> void:
 	#mesh.add_polygon(PackedInt32Array([vertices.find(tile_coordinates[LEFT_VERTEX]), vertices.find(tile_coordinates[RIGHT_VERTEX]), vertices.find(tile_coordinates[BOTTOM_VERTEX])]))
 
 
+func create_ramp_polygon(tile:Vector2i, layer:int, mesh:NavigationMesh, direction:int) -> void:
+	# get the array of vertices from the nav mesh
+	var vertices:PackedVector3Array = mesh.get_vertices()
+	
+	var tile_data:Dictionary = calculate_tile_coords_ramp(tile, layer, direction)
+	var tile_vertices:PackedVector3Array = tile_data["vertices"]
+	var tile_directions:Array[Vector2i] = tile_data["directions"]
+	
+	
+	var triangles:Array[PackedInt32Array] = calculate_triangles(tile_data)
+	
+	var vertex_indices:Array
+	
+	# this checks if the vertices already exist in the nav mesh vertices array
+	# if they don't exist then we add them
+	for vertex in tile_vertices:
+		var vertex_index = vertices.find(vertex)
+		if vertex_index == -1:
+			# vertex doesn't exist so add it
+			vertex_indices.append(vertices.size())
+			vertices.append(vertex)
+		else:
+			vertex_indices.append(vertex_index)
+	
+	# we set the updated vertices array to the nav mesh
+	mesh.set_vertices(vertices)
+	
+	# add the triangles - make sure to use the indices stored in vertex_indices as they relate to the navmesh vertex list
+	for triangle in triangles:
+		var updated_triangle:PackedInt32Array
+		for index in triangle:
+			updated_triangle.append(vertex_indices[index])
+		mesh.add_polygon(updated_triangle)
+
+
+# ramp direction is the direction that you walk UP it - the direction is the edge that is riased to the next level
+func calculate_tile_coords_ramp(tile:Vector2i, layer:int, ramp_direction:int) -> Dictionary:
+	var tile_vertices:PackedVector3Array
+	var tile_directions:Array[Vector2i]
+	
+	var edge_data = get_edge_margins_ramp(tile, layer, ramp_direction)
+	var edge_types = edge_data["edges"]
+	var corner_types = edge_data["corners"]
+	print(edge_data)
+	var even = false
+	if tile.y % 2 == 0:
+		even = true
+	
+	var corner_layers:Array = [layer, layer, layer, layer]
+	var tile_coords = [tile, tile, tile, tile]
+	
+	match ramp_direction:
+		TILE_RAMP_NE:
+			corner_layers[LEFT_VERTEX] -= 1
+			corner_layers[BOTTOM_VERTEX] -= 1
+			tile_coords[LEFT_VERTEX].y += 2
+			tile_coords[BOTTOM_VERTEX].y += 2
+			#if not even:
+			#	tile_coords[LEFT_VERTEX].x += 1
+			#	tile_coords[BOTTOM_VERTEX].x += 1
+		
+		TILE_RAMP_NW:
+			corner_layers[RIGHT_VERTEX] -= 1
+			corner_layers[BOTTOM_VERTEX] -= 1
+			tile_coords[RIGHT_VERTEX].y += 2
+			tile_coords[BOTTOM_VERTEX].y += 2
+			#if not even:
+			#	tile_coords[RIGHT_VERTEX].x += 1
+			#	tile_coords[BOTTOM_VERTEX].x += 1
+		
+		TILE_RAMP_SE:
+			corner_layers[LEFT_VERTEX] -= 1
+			corner_layers[TOP_VERTEX] -= 1
+			tile_coords[LEFT_VERTEX].y += 2
+			tile_coords[TOP_VERTEX].y += 2
+			#if not even:
+			#	tile_coords[LEFT_VERTEX].x += 1
+			#	tile_coords[TOP_VERTEX].x += 1
+		
+		TILE_RAMP_SW:
+			corner_layers[RIGHT_VERTEX] -= 1
+			corner_layers[TOP_VERTEX] -= 1
+			tile_coords[RIGHT_VERTEX].y += 2
+			tile_coords[TOP_VERTEX].y += 2
+			#if not even:
+			#	tile_coords[RIGHT_VERTEX].x += 1
+			#	tile_coords[TOP_VERTEX].x += 1
+	
+	var left_vertex_data:Dictionary = left_vertex_calc(tile_coords[LEFT_VERTEX], corner_layers[LEFT_VERTEX], even, edge_types[SW_EDGE], edge_types[NW_EDGE], corner_types[W_CORNER])
+	tile_vertices.append_array(left_vertex_data["vertices"])
+	tile_directions.append_array(left_vertex_data["directions"])
+	
+	var top_vertex_data:Dictionary = top_vertex_calc(tile_coords[TOP_VERTEX], corner_layers[TOP_VERTEX], even, edge_types[NW_EDGE], edge_types[NE_EDGE], corner_types[N_CORNER])
+	tile_vertices.append_array(top_vertex_data["vertices"])
+	tile_directions.append_array(top_vertex_data["directions"])
+	
+	var right_vertex_data:Dictionary = right_vertex_calc(tile_coords[RIGHT_VERTEX], corner_layers[RIGHT_VERTEX], even, edge_types[NE_EDGE], edge_types[SE_EDGE], corner_types[E_CORNER])
+	tile_vertices.append_array(right_vertex_data["vertices"])
+	tile_directions.append_array(right_vertex_data["directions"])
+	
+	var bottom_vertex_data:Dictionary = bottom_vertex_calc(tile_coords[BOTTOM_VERTEX], corner_layers[BOTTOM_VERTEX], even, edge_types[SE_EDGE], edge_types[SW_EDGE], corner_types[S_CORNER])
+	tile_vertices.append_array(bottom_vertex_data["vertices"])
+	tile_directions.append_array(bottom_vertex_data["directions"])
+	
+	return { "vertices": tile_vertices, "directions": tile_directions }
+
+func get_edge_margins_ramp(tile:Vector2i, layer:int, ramp_direction:int):
+	var edge_types:Array[int]
+	for i in range(4):
+		edge_types.append(EdgeType.STANDARD)
+	
+	# adding this just to make it compatible with the coordinate functions - will all be false
+	var corner_blocked:Array[bool]
+	for i in range(4):
+		corner_blocked.append(false)
+	
+	# tells us which of the two adjacent tile arrays we should use to find the adjacent edge tiles.
+	# will be 0 for even or 1 for odd
+	var adjacent_tile_array:int = tile.y % 2
+	var options = ramp_type[ramp_direction]
+	
+	for i:int in options:
+		# calculate the tile coordinate of the adjacent tile
+		var test_tile = tile + adjacent_tiles[adjacent_tile_array][i]
+		# check if the tiles exists
+		if map_layer_collection[layer].has(test_tile):
+			# tile exists so check if it is blocked by checking the tile above it
+			if layer+1 < layer_count:
+				# tile we are checking will have a y value 2 lower as it is in above layer
+				test_tile.y -= 2
+				if map_layer_collection[layer+1].has(test_tile):
+					# has a stacked tile so need to add margin
+					edge_types[i] = EdgeType.INDENTED
+		
+		else:
+			# tile doesn't exist so need to add margin
+			edge_types[i] = EdgeType.INDENTED
+	
+	return { "edges": edge_types, "corners": corner_blocked}
+
+
 func calculate_tile_coords_flat(tile:Vector2i, layer:int) -> Dictionary:
 	var tile_vertices:PackedVector3Array
 	var tile_directions:Array[Vector2i]
@@ -828,14 +981,38 @@ func get_edge_margins(tile:Vector2i, layer:int):
 				test_tile.y -= 2
 				if map_layer_collection[layer+1].has(test_tile):
 					# has a stacked tile so need to add margin
-					edge_types[i] = EdgeType.INDENTED
+					var tile_data = tilemap.tilemap.get_cell_tile_data(layer+1, test_tile)
+					var tile_type = tile_data.get_custom_data("tile_type")
+					if tile_type == TILE_FLAT:
+						# normal flat tile
+						edge_types[i] = EdgeType.INDENTED
+					else:
+						# ramp so check if it's facing this edge - if not indent it
+						if tile_type != i:
+							edge_types[i] = EdgeType.INDENTED
 		
 		else:
-			# tile doesn't exist so need to add margin
-			edge_types[i] = EdgeType.INDENTED
-			if tile == debug_tile:
-				print(test_tile)
-				print(i)
+			# tile doesn't exist but check if the tile above is a ramp as then we still need to connect
+			if layer+1 < layer_count:
+				# tile we are checking will have a y value 2 lower as it is in above layer
+				test_tile.y -= 2
+				if map_layer_collection[layer+1].has(test_tile):
+					# has a stacked tile so need to add margin
+					var tile_data = tilemap.tilemap.get_cell_tile_data(layer+1, test_tile)
+					var tile_type = tile_data.get_custom_data("tile_type")
+					if tile_type == TILE_FLAT:
+						# not ramp so indent
+						edge_types[i] = EdgeType.INDENTED
+					else:
+						# ramp so check if it's facing this edge - if not indent it
+						if tile_type != i:
+							edge_types[i] = EdgeType.INDENTED
+				else:
+					# no tile above so need to indent stil
+					edge_types[i] = EdgeType.INDENTED
+			else:
+				# top layer so no ramp above and indent
+				edge_types[i] = EdgeType.INDENTED
 	
 	if tile == debug_tile:
 		print("Edge types after side testing:")
