@@ -13,13 +13,15 @@ var map # stores RID of nav map
 var game
 var tilemap
 
-
+var on_ramp:bool = false
+var ramp_tile:Vector2i
 
 func set_path(new_path:PackedVector3Array):
 	path = new_path
 	if path.size() > 0:
 		target_vertical = path[0].y # save the vertcial position of the target point
 		target = v3_to_v2(path[0]) # convert the targer position to a 2D position
+		test_ramp()
 		path.remove_at(0) # remove the target position from the path
 		has_target = true # 
 
@@ -35,6 +37,7 @@ func _physics_process(_delta):
 				# get the new target/remove path/etc
 				target = v3_to_v2(path[0])
 				target_vertical = path[0].y
+				test_ramp()
 				path.remove_at(0)
 				velocity = position.direction_to(target)*MOVE_SPEED
 			else:
@@ -51,14 +54,28 @@ func _physics_process(_delta):
 func get_layer():
 	return floor(cat_vertical/16.0)+1
 
+func get_tile()->Vector2i:
+	if on_ramp:
+		return ramp_tile
+	else:
+		return tilemap.tilemap.local_to_map(position)
+
+func test_ramp():
+	if on_ramp == false:
+		if target_vertical > cat_vertical or target_vertical < cat_vertical:
+			on_ramp = true
+	if on_ramp == true:
+		if target_vertical == cat_vertical:
+			on_ramp = false
+
 func get_cat_vertical():
 	var cat_layer = ceil(cat_vertical/16.0)
-	var cat_tile = game.tilemap.local_to_map(position)
-	
-	var tile_data = game.tilemap.get_cell_tile_data(cat_layer, cat_tile)
+	var cat_tile = tilemap.tilemap.local_to_map(position)
+	print("\tCat layer: %s" % cat_layer)
+	var tile_data = tilemap.tilemap.get_cell_tile_data(cat_layer, cat_tile)
 	var tile_num = tile_data.get_custom_data("tile_type")
 	
-	if tile_num != 0: # so is a ramp - chnage this if other shaped tiles are used
+	if tile_num != 4: # so is a ramp - chnage this if other shaped tiles are used
 		return (cat_layer * 16) + 1
 	else:
 		return (cat_layer * 16)
