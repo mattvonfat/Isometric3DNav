@@ -7,7 +7,7 @@ enum { LEFT_VERTEX=0, TOP_VERTEX, RIGHT_VERTEX, BOTTOM_VERTEX }
 
 
 @onready var tilemap = $CustomTileMap
-@onready var cat = $Cat
+@onready var cat = tilemap.get_node("TileMap").get_node("Cat")
 
 const LAYER_HEIGHT:int = 16
 
@@ -497,7 +497,7 @@ func get_edge_margins_ramp(tile:Vector2i, layer:int, ramp_direction:int) -> Dict
 	# tells us which of the two adjacent tile arrays we should use to find the adjacent edge tiles.
 	# will be 0 for even or 1 for odd
 	var adjacent_tile_array:int = tile.y % 2
-	var options:Array[int] = ramp_type[ramp_direction]
+	var options = ramp_type[ramp_direction]
 	
 	for i:int in options:
 		# calculate the tile coordinate of the adjacent tile

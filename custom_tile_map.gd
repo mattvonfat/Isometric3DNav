@@ -46,7 +46,7 @@ var nav_map:RID # navigation map that we will create
 
 
 func _ready():
-	tilemap.hide()
+	#tilemap.hide()
 	
 	layer_count = tilemap.get_layers_count()
 	map_layer_collection = {}
@@ -79,9 +79,9 @@ func _input(event):
 		print(tilemap.local_to_map(cat.position))
 
 
-func _draw():
-	#draw_back_triangle()
-	draw_triangle_surround()
+#func _draw():
+	##draw_back_triangle()
+	#draw_triangle_surround()
 
 func _draw_new():
 	var temp_tile_collection_1 = map_layer_collection.duplicate(true)
@@ -538,7 +538,7 @@ func draw_tile(layer:int, tile:Vector2i) -> void:
 
 func set_cat(c):
 	cat = c
-	cat.get_node("Sprite2D").hide()
+	#cat.get_node("Sprite2D").hide()
 
 # custom array sort - sorts the array by y value low to high
 func sort_y_low_to_high(a:Vector2i, b:Vector2i) -> bool:
