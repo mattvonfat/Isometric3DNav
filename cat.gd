@@ -16,6 +16,10 @@ var tilemap
 var on_ramp:bool = false
 var ramp_tile:Vector2i
 
+
+const BASE_OFFSET:int = -8
+
+
 func set_path(new_path:PackedVector3Array):
 	path = new_path
 	if path.size() > 0:
@@ -50,6 +54,29 @@ func _physics_process(_delta):
 		move_and_slide()
 		tilemap.queue_redraw()
 		#test()
+
+
+
+func update_movement():
+	# see if we have reached the target - I just guessed at 2 being ok
+		if position.distance_to(target) < 2:
+			# check if there are more points in the path
+			if path.size() > 0:
+				# update the cat vertical position
+				cat_vertical = target_vertical
+				# get the new target/remove path/etc
+				target = v3_to_v2(path[0])
+				target_vertical = path[0].y
+				test_ramp()
+				path.remove_at(0)
+				velocity = position.direction_to(target)*MOVE_SPEED
+			else:
+				# no more points in path so target is reached
+				has_target = false
+				velocity = Vector2.ZERO
+		else:
+			velocity = position.direction_to(target)*MOVE_SPEED
+
 
 func get_layer():
 	return floor(cat_vertical/16.0)+1
