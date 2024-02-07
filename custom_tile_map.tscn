@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://xdfhbf1d8xvs"]
+[gd_scene load_steps=5 format=3 uid="uid://xdfhbf1d8xvs"]
 
 [ext_resource type="Script" path="res://custom_tile_map.gd" id="1_k8g5g"]
 [ext_resource type="TileSet" uid="uid://264xewdot03o" path="res://tiles.tres" id="2_x6nlb"]
 [ext_resource type="PackedScene" uid="uid://c4n7gcsd4euex" path="res://cat.tscn" id="3_7gghw"]
+[ext_resource type="PackedScene" uid="uid://dxxvt241du55y" path="res://custom_navigation_link.tscn" id="4_a3yay"]
 
 [node name="CustomTileMap" type="Node2D"]
 y_sort_enabled = true
@@ -38,8 +39,6 @@ layer_4/y_sort_origin = 56
 layer_4/navigation_enabled = false
 layer_4/tile_data = PackedInt32Array(-458761, 131073, 1, -589834, 131073, 1, -393226, 1, 0, -458762, 1, 0, -524299, 1, 0, -589835, 1, 0, -524300, 1, 0, -458764, 1, 0, -393229, 1, 0, -327693, 1, 0, -262158, 1, 0, -196621, 1, 0, -131086, 1, 0, -65550, 1, 0, -196622, 1, 0, -131087, 1, 0, -14, 1, 0, 65523, 1, 0, -327690, 1, 0, -262155, 1, 0, -196619, 1, 0, -131084, 1, 0, -65548, 1, 0, -13, 1, 0, -458763, 1, 0, -393227, 1, 0, -327691, 1, 0, -262156, 1, 0, -196620, 1, 0, -131085, 1, 0, -65549, 1, 0, -262157, 1, 0, -327692, 1, 0, -393228, 1, 0, -15, 196609, 0, 131058, 196609, 0, -524298, 131073, 1, -655371, 131073, 1, 65522, 196609, 0, -65551, 196609, 0)
 
-[node name="Cat" parent="TileMap" instance=ExtResource("3_7gghw")]
-
 [node name="TileMap2" type="TileMap" parent="."]
 visible = false
 y_sort_enabled = true
@@ -67,3 +66,17 @@ layer_1/tile_data = PackedInt32Array(-262143, 327681, 3, -327679, 131073, 3, -26
 layer_2/y_sort_enabled = true
 layer_2/z_index = 2
 layer_2/tile_data = PackedInt32Array()
+
+[node name="NavigationLinks" type="Node2D" parent="."]
+z_index = 5
+
+[node name="CustomNavigationLink" parent="NavigationLinks" instance=ExtResource("4_a3yay")]
+start_position = Vector2(64, 10)
+end_position = Vector2(12, -127)
+end_position_layer = 3
+
+[node name="Entities" type="Node2D" parent="."]
+
+[node name="Cat" parent="Entities" instance=ExtResource("3_7gghw")]
+z_index = 1
+position = Vector2(9, 34)

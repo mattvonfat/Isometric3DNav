@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dxxvt241du55y"]
+
+[ext_resource type="Script" path="res://custom_navigation_link.gd" id="1_0yahs"]
+
+[node name="CustomNavigationLink" type="NavigationLink2D"]
+script = ExtResource("1_0yahs")

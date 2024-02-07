@@ -1,7 +1,7 @@
 extends Node2D
 
 @onready var tilemap = $CustomTileMap
-@onready var cat = tilemap.get_node("TileMap").get_node("Cat")
+@onready var cat = tilemap.get_node("Entities").get_node("Cat")
 
 func _ready():
 	cat.game = self

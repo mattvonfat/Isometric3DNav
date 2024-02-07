@@ -9,7 +9,6 @@ script = ExtResource("1_evdt2")
 [node name="CustomTileMap" parent="." instance=ExtResource("2_3cpx8")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(6, 6)
 
 [node name="Label" type="Label" parent="."]
 offset_left = -566.0

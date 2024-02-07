@@ -4,13 +4,13 @@
 [ext_resource type="Texture2D" uid="uid://dil4qmrh6d4os" path="res://resources/images/cat.png" id="2_yigp0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pb7rt"]
-size = Vector2(13, 11.75)
+size = Vector2(16, 16)
 
 [node name="Cat" type="CharacterBody2D"]
 script = ExtResource("1_na31m")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0.5, -6.125)
+position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_pb7rt")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

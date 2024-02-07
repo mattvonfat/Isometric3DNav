@@ -1,6 +1,7 @@
 extends Node2D
 
 @onready var tilemap:TileMap = $TileMap
+@onready var navigation_links:Node2D = $NavigationLinks
 
 var steps = [ "", "Draw base layer only.", "Draw base layer and area behind character.", "Draw base layer, area behind character, and character.", "Draw everything." ]
 
@@ -42,29 +43,22 @@ var corner_sides:Array[Array] = [ [NW_EDGE, NE_EDGE], [SE_EDGE, SW_EDGE], [NE_ED
 var opposite_ramp:Array[int] = [ TILE_RAMP_SE, TILE_RAMP_SW, TILE_RAMP_NW, TILE_RAMP_NE ]
 var opposite_edge:Array[int] = [ SE_EDGE, SW_EDGE, NW_EDGE, NE_EDGE ]
 
-var nav_map:RID # navigation map that we will create
+var navigation_map:RID # navigation map that we will create
 
 
 func _ready():
-	#tilemap.hide()
-	generate_nav_mesh(true)
-	layer_count = tilemap.get_layers_count()
-	map_layer_collection = {}
-	
-	# get the tile map data for each layer and store in map_collection_layer
-	for layer_id in range(layer_count):
-		map_layer_collection[layer_id] = tilemap.get_used_cells(layer_id)
-	
-	tileset = tilemap.get_tileset()
+	# first we generate the 3D nav mesh
+	generate_nav_mesh(true, "saved_navmesh.tres")
+	NavigationServer2D.map_force_update(navigation_map)
+	# now get the navigation links and add them to NavigationServer3D
+	add_navigation_links()
 
 func _input(event):
 	if event.is_action_released("ui_end"):
 		if d:
 			d = false
-			#tilemap.show()
 		else:
 			d=true
-			#tilemap.hide()
 	
 	if event.is_action_released("ui_page_down"):
 		draw_step = draw_step + 1
@@ -90,7 +84,7 @@ func _input(event):
 					# get the 3D position of the character
 					var character_pos3D = cat.get_pos3D()
 					# get the path from the NavigationServer3D
-					var path:PackedVector3Array = NavigationServer3D.map_get_path(nav_map, character_pos3D, clicked_pos3D, true)
+					var path:PackedVector3Array = NavigationServer3D.map_get_path(navigation_map, character_pos3D, clicked_pos3D, true)
 					# pass the path to the character
 					cat.set_path(path)
 					tilemap.queue_redraw()
@@ -101,12 +95,19 @@ func _input(event):
 
 
 func set_cat(c):
-	print(1)
 	cat = c
-	cat.map = nav_map
+	cat.map = navigation_map
 	#cat.get_node("Sprite2D").hide()
 
 
+
+
+# takes a 3D vector and returns the x and z coords as a 2D vector
+func V3_to_V2(v3:Vector3):
+	var v2 = Vector2()
+	v2.x = v3.x
+	v2.y = v3.z
+	return v2
 
 ######################################
 ##
@@ -151,15 +152,15 @@ func generate_nav_mesh(save_navmesh:bool=false, navmesh_filename:String="saved_n
 		print("Nav mesh save result: %s" % save_result)
 	
 	# create a new navigation map
-	nav_map = NavigationServer3D.map_create()
+	navigation_map = NavigationServer3D.map_create()
 	
 	# create a new navigation region and add the mesh to it, then add the region to the map
 	var new_region:RID = NavigationServer3D.region_create()
 	NavigationServer3D.region_set_navigation_mesh(new_region, new_mesh)
-	NavigationServer3D.region_set_map(new_region, nav_map)
+	NavigationServer3D.region_set_map(new_region, navigation_map)
 	
 	# make the new map the active map
-	NavigationServer3D.map_set_active(nav_map, true)
+	NavigationServer3D.map_set_active(navigation_map, true)
 
 
 # Creates a polygon for a tile
@@ -1138,10 +1139,16 @@ func do_lines_intersect(P1:Vector2, P2:Vector2, P3:Vector2, P4:Vector2, debug:bo
 
 
 
+#########################
+##
+## Navigation link functions
+##
+#########################
 
-
-
-
+# Adds the navigation links to NavigationServer3D
+func add_navigation_links() -> void:
+	for link:CustomNavigationLink in navigation_links.get_children():
+		link.create_3D_link(navigation_map, LAYER_HEIGHT, get_instance_id())
 
 
 
