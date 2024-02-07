@@ -78,6 +78,7 @@ func process_movement() -> void:
 		velocity = position.direction_to(adjusted_target_2D) * MOVE_SPEED
 	
 	move_and_slide()
+	tilemap.queue_redraw()
 
 
 
