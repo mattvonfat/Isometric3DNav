@@ -7,5 +7,5 @@ func _ready():
 	cat.game = self
 	$CustomTileMap.set_cat(cat)
 	cat.tilemap = $CustomTileMap
-	$Label.set_text(tilemap.steps[4])
-	tilemap.label = $Label
+	$CanvasLayer/Label.set_text(tilemap.steps[tilemap.drawing_filter])
+	tilemap.label = $CanvasLayer/Label

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://xw34t445eeeq"]
 
-[ext_resource type="NavigationMesh" uid="uid://nuyve52p0spf" path="res://saved_navmesh.tres" id="1_ow5ru"]
+[ext_resource type="NavigationMesh" uid="uid://c5f2bhsu2tl4x" path="res://saved_navmesh.tres" id="1_ow5ru"]
 
 [node name="NavMeshTest" type="Node3D"]
 

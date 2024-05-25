@@ -80,10 +80,11 @@ func process_movement() -> void:
 	move_and_slide()
 	tilemap.queue_redraw()
 
-
+func get_sprite():
+	return $Sprite2D
 
 func get_layer():
-	return floor(character_vertical_position/16)+1
+	return floor(character_vertical_position/16)
 
 func set_path_old(new_path:PackedVector3Array):
 	path = new_path

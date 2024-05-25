@@ -3,7 +3,7 @@ extends Node2D
 @onready var tilemap:TileMap = $TileMap
 @onready var navigation_links:Node2D = $NavigationLinks
 
-var steps = [ "", "Draw base layer only.", "Draw base layer and area behind character.", "Draw base layer, area behind character, and character.", "Draw everything." ]
+var steps = [ "Nothing", "BASE", "SURROUND", "RAMP", "ENTITY", "REMAINING", "EVERYTHING" ]
 
 var tileset:TileSet
 
@@ -31,6 +31,8 @@ enum { TILE_RAMP_NW=0, TILE_RAMP_NE=1, TILE_RAMP_SE=2, TILE_RAMP_SW=3, TILE_FLAT
 enum { NW_EDGE=0, NE_EDGE, SE_EDGE, SW_EDGE }
 enum { N_CORNER=0, S_CORNER, E_CORNER, W_CORNER }
 
+enum DrawStage { NOTHING=0, BASE=1, SURROUND=2, RAMP=3, ENTITY=4, REMAINING=5, EVERYTHING=6 }
+
 var ramp_type:Array[Array] = [ [3, 1], [0, 2], [3, 1], [0, 2] ]
 
 var adjacent_tiles_even:Array[Vector2i] = [  Vector2i(-1,-1), Vector2i(0,-1), Vector2i(0,1), Vector2i(-1,1) ]
@@ -46,6 +48,7 @@ var opposite_edge:Array[int] = [ SE_EDGE, SW_EDGE, NW_EDGE, NE_EDGE ]
 
 var navigation_map:RID # navigation map that we will create
 
+var drawing_filter:int = DrawStage.EVERYTHING
 
 func _ready():
 	# first we generate the 3D nav mesh
@@ -59,10 +62,12 @@ func _ready():
 	tileset = tilemap.tile_set
 	$Entities/Cat.hide()
 
+
 func _draw():
 	##draw_back_triangle()
 	#draw_triangle_surround()
-	new_draw_with_stairs()
+	#new_draw_with_stairs()
+	yet_another_draw_function()
 
 func _input(event):
 	if event.is_action_released("ui_end"):
@@ -72,10 +77,10 @@ func _input(event):
 			d=true
 	
 	if event.is_action_released("ui_page_down"):
-		draw_step = draw_step + 1
-		if draw_step == 5:
-			draw_step = 1
-		label.set_text(steps[draw_step])
+		drawing_filter += 1
+		if drawing_filter == 7:
+			drawing_filter = 0
+		label.set_text(steps[drawing_filter])
 		queue_redraw()
 	
 	if event.is_action_released("ui_right"):
@@ -1627,27 +1632,10 @@ func draw_back_triangle():
 
 						draw_texture_rect_region(texture, drawing_rect, Rect2(coords.x*32, coords.y*32, 32, 32))
 
-func draw_full_layer(layer, tile_collection):
-	for tile in tile_collection:
-		draw_tile(layer, tile)
 
 
-func draw_tile(layer:int, tile:Vector2i) -> void:
-	var source_id = tilemap.get_cell_source_id(layer, tile)
-	var coords = tilemap.get_cell_atlas_coords(layer, tile)
-	var source = tileset.get_source(source_id)
-	var texture = source.texture
 
-	var drawing_rect = Rect2(0, 0, 32, 32)
 
-	if tile.y % 2 == 0:
-		drawing_rect.position.x = (tile.x*32)
-		drawing_rect.position.y = (tile.y*8)
-	else:
-		drawing_rect.position.x = 16+(tile.x*32)
-		drawing_rect.position.y = (tile.y*8) 
-
-	draw_texture_rect_region(texture, drawing_rect, Rect2(coords.x*32, coords.y*32, 32, 32))
 
 
 # custom array sort - sorts the array by y value low to high
@@ -1846,4 +1834,227 @@ func new_draw_with_stairs():
 
 
 func yet_another_draw_function():
+	var temp_tile_collection_1:Dictionary = map_layer_collection.duplicate(true)
+	var temp_tile_collection_2:Dictionary = {}
+	var extra_tiles:Dictionary = {}
+	
+	var entity_position:Vector2 = cat.position
+	var entity_tile:Vector2i = tilemap.local_to_map(entity_position)
+	
+	# the tile map layer that the entity is standing on
+	var entity_layer:int = cat.get_layer()
+	
+	# calculate if the y tile coord is even as this comes in useful later on
+	var even_y:bool = true
+	if entity_tile.y % 2 != 0:
+		even_y = false
+	
+	var ramp_tiles = is_entity_on_ramp(entity_position, entity_tile, entity_layer, even_y)
+	
+	if ramp_tiles[1] is Vector2i or ramp_tiles[0] is Vector2i:
+		entity_layer += 1
+	
+	## BEGIN DRAWING:
+	
+	if drawing_filter >= DrawStage.BASE:
+		# draw the full layer of layers below the character
+		for layer:int in range(0, entity_layer+1):
+			temp_tile_collection_2[layer] = []
+			draw_full_layer(layer, temp_tile_collection_1[layer])
+	
+	
+	if drawing_filter >= DrawStage.SURROUND:
+		# draw the tiles behind the entity
+		for layer:int in range(entity_layer+1, layer_count):
+			temp_tile_collection_2[layer] = []
+			draw_surrounding_triangle_layer(layer, entity_layer, entity_tile, temp_tile_collection_1[layer], temp_tile_collection_2[layer], ramp_tiles)
+	
+	
+	if drawing_filter >= DrawStage.ENTITY:
+		# draw the character
+		draw_entity_sprite(cat, entity_position)
+	
+	
+	if drawing_filter >= DrawStage.REMAINING:
+		# draw the remaining tiles for each layer
+		for layer:int in range(entity_layer+1, layer_count):
+			# can use draw_full_layer as we are drawing everything in the remainig tiles array
+			draw_full_layer(layer, temp_tile_collection_2[layer])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# draws a full layer of the tilemap
+func draw_full_layer(layer:int, tile_collection:Array) -> void:
+	for tile in tile_collection:
+		draw_tile(layer, tile)
+
+# draws the tiles that surround the front triangle area - probably needs a better func name!!
+func draw_surrounding_triangle_layer(layer:int, entity_layer:int, entity_tile:Vector2i, tile_collection:Array, unused_tile_collection:Array, ramp_tiles:Array):
+	for tile in tile_collection:
+		# calc_tile is the tile we will base calculations on
+		var calc_tile:Vector2i = tile
+		
+		# work out the y tile coord of this tile is it was sitting on the same layer
+		# as the entity (think base of tile column)
+		calc_tile.y -= 2 * (entity_layer - layer)
+		
+		# adjust the x coordinate of calc_tile
+		if calc_tile.x < entity_tile.x:
+			if calc_tile.y % 2 != 0:
+				calc_tile.y += 1
+		elif calc_tile.x > entity_tile.x:
+			if calc_tile.y % 2 == 0:
+				calc_tile.y += 1
+		
+		
+		if layer == entity_layer+1 and calc_tile == entity_tile:
+			# draw the tile that the entity is within - shouldn't happen as it shouldn't get in there
+			# but just in case this means the tile doesn't block the entity
+			draw_tile(layer, tile)
+		
+		elif calc_tile.y - (2*abs(entity_tile.x - calc_tile.x)) < entity_tile.y:
+			draw_tile(layer, tile)
+		
+		else:
+			# check if it is a ramp tile as we draw it anyway
+			if ramp_tiles.has(tile):
+				if drawing_filter >= DrawStage.RAMP:
+					print("yeah")
+					draw_tile(layer, tile)
+			else:
+				# if not then add to unused tiles
+				unused_tile_collection.append(tile)
+
+
+# draws a specific tile of tilemap
+func draw_tile(layer:int, tile:Vector2i) -> void:
+	var source_id = tilemap.get_cell_source_id(layer, tile)
+	var coords = tilemap.get_cell_atlas_coords(layer, tile)
+	var source = tileset.get_source(source_id)
+	var texture = source.texture
+
+	var drawing_rect = Rect2(0, 0, 32, 32)
+
+	if tile.y % 2 == 0:
+		drawing_rect.position.x = (tile.x*32)
+		drawing_rect.position.y = (tile.y*8)
+	else:
+		drawing_rect.position.x = 16+(tile.x*32)
+		drawing_rect.position.y = (tile.y*8) 
+
+	draw_texture_rect_region(texture, drawing_rect, Rect2(coords.x*32, coords.y*32, 32, 32))
+
+
+func draw_entity_sprite(entity_node:Node, entity_position:Vector2):
+	var entity_texture:Texture2D = entity_node.get_sprite().get_texture()
+	draw_texture_rect(entity_texture, Rect2(entity_position.x-8, entity_position.y-16, 16, 16), false)
+
+func draw_entity_animated_sprite():
 	pass
+
+func is_entity_on_ramp(entity_position:Vector2, entity_tile:Vector2i, layer:int, even_y:bool):
+	# adjusted_entity_position is the position of the entity if it were within tile (0, 0)
+	var adjusted_entity_position:Vector2
+	adjusted_entity_position.x = entity_position.x - (entity_tile.x * 32)
+	adjusted_entity_position.y = entity_position.y - (entity_tile.y * 8)
+	if not even_y:
+		adjusted_entity_position.x -= 16
+	
+	# the tile the entity is on could be on one of two tiles, it is either at the top or bottom
+	# of the ramp so we calculate both options. which specific tile each potential ramp tile is
+	# can also vary based on the entities position within the tile
+	var potential_ramp_tile_1:Vector2i = entity_tile
+	var potential_ramp_tile_2:Vector2i = entity_tile
+	
+	# right of tells us whether the entity is to the right or left of the slope
+	var right_of_1:bool = false
+	var right_of_2:bool = false
+	print("\nMain tile")
+	print(entity_tile)
+	## calculate the first potential ramp tile - assumes the entity is on the lower part of the ramp
+	# the slope is the slope of the edge of the ramp. we calculate the x position of the slope at
+	# the y value of the entity (x = (y-c)/m)
+	var slope_x_position:float = (adjusted_entity_position.y - 40) / -1.5
+	# we now check whether the entities x position is to the left or right of the ramp edge
+	if (adjusted_entity_position.x <= slope_x_position):
+		# left of stair edge - stair would be tile y-2
+		potential_ramp_tile_1.y -= 2
+		pass
+	else:
+		# right of stair edge - stair would be tile y-1
+		potential_ramp_tile_1.y -= 1
+		if not even_y:
+			potential_ramp_tile_1.x += 1
+		right_of_1 = true
+	
+	## calculate the second potential ramp tile
+	var slope_x_position_2:float = (adjusted_entity_position.y - 24) / -1.5
+	# we now check whether the entities x position is to the left or right of the ramp edge
+	if (adjusted_entity_position.x <= slope_x_position_2):
+		potential_ramp_tile_2.y -= 1
+		if even_y:
+			potential_ramp_tile_2.x -= 1
+	else:
+		# right of stair edge - stair would be tile y-1
+		#potential_ramp_tile_2.y += 2
+		print(1)
+		right_of_2 = true
+	
+	
+	var ramp_tiles:Array = [0, 0]
+	
+	print("Tiles:")
+	print(potential_ramp_tile_1)
+	print(potential_ramp_tile_2)
+	print("Slope2")
+	print(slope_x_position_2)
+	print("pos")
+	print(entity_position)
+	print(adjusted_entity_position)
+	print("Adjustment: %s" % ((entity_tile.x * 32)))
+	
+	var tile_data:TileData
+	var tile_type:int
+	
+	if layer+1 < layer_count:
+		# potential ramp tile 1 is on same layer as entity
+		tile_data = tilemap.get_cell_tile_data(layer+1, potential_ramp_tile_1)
+		if tile_data:
+			tile_type = tile_data.get_custom_data("tile_type")
+			
+			if tile_type == TILE_RAMP_NE:
+				ramp_tiles[0] = potential_ramp_tile_1
+		
+		
+		# potential ramp tile 2 is on layer below entity
+		
+		tile_data = tilemap.get_cell_tile_data(layer+1, potential_ramp_tile_2)
+		if tile_data:
+			tile_type = tile_data.get_custom_data("tile_type")
+			
+			if tile_type == TILE_RAMP_NE:
+				ramp_tiles[1] = potential_ramp_tile_2
+		print(ramp_tiles)
+	
+	return ramp_tiles
+	
