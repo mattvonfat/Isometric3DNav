@@ -53,20 +53,20 @@ func get_next_target() -> void:
 	
 	target_2D = V3_to_V2(target_3D)
 	
-	adjusted_target_2D = target_2D
-	adjusted_target_2D.y += target_3D.y
+	#adjusted_target_2D = target_2D
+	#adjusted_target_2D.y += target_3D.y
 	
-	sprite.position.y = BASE_OFFSET - target_3D.y
+	#sprite.position.y = BASE_OFFSET - target_3D.y
 
 
 func process_movement() -> void:
-	if position.distance_to(adjusted_target_2D) < 2:
+	if position.distance_to(target_2D) < 2:
 		# reached the target
 		if navigation_path.size() > 0:
 			# more points in the path
 			character_vertical_position = target_3D.y
 			get_next_target()
-			velocity = position.direction_to(adjusted_target_2D) * MOVE_SPEED
+			velocity = position.direction_to(target_2D) * MOVE_SPEED
 		
 		else:
 			# reached final point, remove target and reset velocity
@@ -75,14 +75,15 @@ func process_movement() -> void:
 	
 	else:
 		# still moving to current target
-		velocity = position.direction_to(adjusted_target_2D) * MOVE_SPEED
+		velocity = position.direction_to(target_2D) * MOVE_SPEED
 	
 	move_and_slide()
 	tilemap.queue_redraw()
 
 
 
-
+func get_layer():
+	return floor(character_vertical_position/16)+1
 
 func set_path_old(new_path:PackedVector3Array):
 	path = new_path

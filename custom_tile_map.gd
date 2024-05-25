@@ -37,6 +37,7 @@ var adjacent_tiles_even:Array[Vector2i] = [  Vector2i(-1,-1), Vector2i(0,-1), Ve
 var adjacent_tiles_odd:Array[Vector2i] = [  Vector2i(0,-1), Vector2i(1,-1), Vector2i(1,1), Vector2i(0,1) ]
 var adjacent_tiles:Array[Array] = [adjacent_tiles_even, adjacent_tiles_odd]
 
+# these are both in the same order as the corner enum values - N S E W
 var corner_vectors:Array[Vector2i] = [  Vector2i(0,-2), Vector2i(0,2), Vector2i(1,0), Vector2i(-1,0) ] # N, S, E, W
 var corner_sides:Array[Array] = [ [NW_EDGE, NE_EDGE], [SE_EDGE, SW_EDGE], [NE_EDGE, SE_EDGE], [NW_EDGE, SW_EDGE] ]
 
@@ -56,6 +57,12 @@ func _ready():
 	#drawing stuff
 	tilemap.hide()
 	tileset = tilemap.tile_set
+	$Entities/Cat.hide()
+
+func _draw():
+	##draw_back_triangle()
+	#draw_triangle_surround()
+	new_draw_with_stairs()
 
 func _input(event):
 	if event.is_action_released("ui_end"):
@@ -70,6 +77,10 @@ func _input(event):
 			draw_step = 1
 		label.set_text(steps[draw_step])
 		queue_redraw()
+	
+	if event.is_action_released("ui_right"):
+		print(cat.character_vertical_position)
+		print(cat.get_layer())
 	
 	if event.is_action_released("ui_home"):
 		print(cat.get_layer())
@@ -391,7 +402,8 @@ func get_edge_margins(tile:Vector2i, layer:int) -> Dictionary:
 			else:
 				# top layer so no ramp above and indent
 				edge_types[i] = EdgeType.INDENTED
-	
+	if (tile == Vector2i(0,-1) and layer == 1):
+		print(edge_types)
 	# Go through the corners to see if the tile needs a corner wedge
 	for i:int in range(corner_vectors.size()):
 		var test_tile:Vector2i = tile + corner_vectors[i]
@@ -500,6 +512,19 @@ func get_edge_margins(tile:Vector2i, layer:int) -> Dictionary:
 									pass
 								else:
 									corner_blocked[i] = true
+				else:
+					if tile == Vector2i(0,-1) and layer == 1:
+						print("Here")
+						# no tile and nothing above but now need to see if it connects to tiles either side
+						print(edge_types)
+					if edge_types[corner_sides[i][0]] == EdgeType.STANDARD and edge_types[corner_sides[i][1]] == EdgeType.STANDARD:
+						if tile == Vector2i(0,-1) and layer == 1:
+							print("Blocked")
+						corner_blocked[i] = true
+			else:
+				# no tile and nothing above but now need to see if it connects to tiles either side
+				if edge_types[corner_sides[i][0]] == EdgeType.STANDARD and edge_types[corner_sides[i][1]] == EdgeType.STANDARD:
+					corner_blocked[i] = true
 	
 	return { "edges": edge_types, "corners": corner_blocked}
 
@@ -1164,9 +1189,7 @@ func add_navigation_links() -> void:
 ##
 ########################
 
-func _draw():
-	##draw_back_triangle()
-	draw_triangle_surround()
+
 
 func _draw_new():
 	var temp_tile_collection_1 = map_layer_collection.duplicate(true)
@@ -1427,15 +1450,20 @@ func draw_triangle_surround():
 	var temp_tile_collection_2 = []
 	var extra_tiles = []
 	
+	
+	
+	
+	
 	# get the tile coords of the cat
 	var cat_tile = tilemap.local_to_map(cat.position)
 	# the coords are the tile that is in the layer the cat is standing on, we need it to be the tile that it is standing in
 	# rather than the tile below it, so the y position is 2 lower
 	cat_tile.y -= 2
 	
+	
 	# get the layer the cat is within - if the cat is on a ramp or stairs then this will be the layer above the stairs
 	# so they are drawn below it
-	var cat_layer = 0#cat.get_layer()
+	var cat_layer = 1#cat.get_layer()
 	var is_on_ramp = cat.on_ramp
 	#print("In tilemap: %s" % cat_layer)
 	
@@ -1447,6 +1475,10 @@ func draw_triangle_surround():
 	var even_y = true
 	if cat_tile.y % 2 != 0:
 		even_y = false
+	
+	
+	
+	
 	
 	var calc_tile
 	
@@ -1493,6 +1525,7 @@ func draw_triangle_surround():
 			
 			for tile in temp_tile_collection_2[layer]:
 				draw_tile(layer, tile)
+
 
 func draw_back_triangle():
 	var temp_tile_collection = map_layer_collection.duplicate(true)
@@ -1622,3 +1655,195 @@ func sort_y_low_to_high(a:Vector2i, b:Vector2i) -> bool:
 	if a.y < b.y:
 		return true
 	return false
+
+
+
+
+
+
+func new_draw_with_stairs():
+	var temp_tile_collection_1 = map_layer_collection.duplicate(true)
+	var temp_tile_collection_2 = []
+	var extra_tiles = []
+	
+	# get cat locations
+	var cat_position:Vector2 = cat.position
+	var cat_tile = tilemap.local_to_map(cat_position)
+	
+	var cat_layer:int = cat.get_layer()
+	
+	# work out if the y tile coord is even - affects manipulation of tile coords
+	var even_y = true
+	if cat_tile.y % 2 != 0:
+		even_y = false
+	
+	var right_of:bool = false
+	
+	# work out if cat is on ramp
+	# ------ ONLY WORKS FOR RAMPS IN NE DIRECTION AT THE MOMENT
+	# first get the character coordinates adjusted so that they are based on the cat being in tile [0,0]
+	# (so that it is between 0-32 for x and 0-16 for y)
+	var adjusted_cat_position:Vector2
+	adjusted_cat_position.x = cat.position.x - (cat_tile.x * 32)
+	adjusted_cat_position.y = cat.position.y * 8
+	if not even_y:
+		adjusted_cat_position.x += 16
+	
+	# potential_ramp_tile is the tile that the cat could be standing on if it's on a ramp
+	# will be a lower y than the cats actual position and varies depending where it is on the current tile
+	var potential_ramp_tile:Vector2i = cat_tile
+	var potential_ramp_tile2:Vector2i = cat_tile # assuming its the top of the ramp
+	
+	# x position on the stair slope !!!!!!!!!!!!!!!!!!!!!!!!!!!! THIS ONLY WORKS FOR NE STAIRS!!!!
+	# gets the x position of the edge of the ramp based on the y position of the character
+	# x = (y-c)/m
+	var slope_x_position:float = (adjusted_cat_position.y - 40) / -1.5
+	# we now check whether the characters x position is to the left or right of the ramp edge
+	if (adjusted_cat_position.x <= slope_x_position):
+		# left of stair edge - stair would be tile y-2
+		potential_ramp_tile.y -= 2
+	else:
+		# right of stair edge - stair would be tile y-1
+		potential_ramp_tile.y -= 1
+		if not even_y:
+			potential_ramp_tile.x -= 1
+		right_of = true
+	
+	
+	
+	
+	#var slope_x_position_2:float = (adjusted_cat_position.y - 24) / -1.5
+	## we now check whether the characters x position is to the left or right of the ramp edge
+	#if (adjusted_cat_position.x <= slope_x_position_2):
+		## left of stair edge - stair would be tile y-2
+		#potential_ramp_tile2.y -= 1
+		#if even_y:
+			#potential_ramp_tile2.x -= 1
+	#else:
+		## right of stair edge - stair would be tile y-1
+		#potential_ramp_tile2.y -= 1
+	
+	
+	
+	var potential_ramp_layer = cat_layer# + 1
+	
+	var test_tile_type1:int = -1
+	var test_tile_type2:int = -1
+	var ramp_tile
+	
+	var test_tile_data:TileData = tilemap.get_cell_tile_data(potential_ramp_layer, potential_ramp_tile)
+	if test_tile_data:
+		test_tile_type1 = test_tile_data.get_custom_data("tile_type")
+	
+	
+	
+	test_tile_data = tilemap.get_cell_tile_data(potential_ramp_layer, potential_ramp_tile2)
+	if test_tile_data:
+		test_tile_type2 = test_tile_data.get_custom_data("tile_type")
+	
+	var draw_ramp:bool = false
+	
+	if test_tile_type2 == TILE_RAMP_NE:
+		draw_ramp = true
+		ramp_tile = potential_ramp_tile2
+	else:
+		if right_of:
+			cat_tile.y -= 1
+			if not even_y:
+				cat_tile.x += 1
+		else:
+			cat_tile.y -= 2
+	
+	#elif test_tile_type1 == TILE_RAMP_NE:
+		#draw_ramp = true
+		#ramp_tile = potential_ramp_tile
+	
+	
+	
+	print("Cat tile: %s" % cat_tile)
+	print("Potential ramp tile 1: %s" % potential_ramp_tile)
+	print("Potential ramp tile 2: %s" % potential_ramp_tile2)
+	print("Potential ramp layer: %s" % potential_ramp_layer)
+	print("Draw ramp: %s" % draw_ramp)
+	print("Ramp tile: %s" % ramp_tile)
+	
+	
+	
+	
+
+	
+	## NOT DOING YET
+	## the coords are the tile that is in the layer the cat is standing on, we need it to be the tile that it is standing in
+	## rather than the tile below it, so the y position is 2 lower
+	
+	
+	# get the layer the cat is within - if the cat is on a ramp or stairs then this will be the layer above the stairs
+	# so they are drawn below it
+	#var cat_layer = 1#cat.get_layer()
+	#var is_on_ramp = cat.on_ramp
+	#print("In tilemap: %s" % cat_layer)
+	
+	# these are set for testing the drawing
+	#cat_tile = Vector2i(-1,-21)
+	#cat_layer = 1
+	var base_tile= cat_tile
+	base_tile.y += 1
+	
+	
+	var calc_tile
+	
+	# draw the full layer of layers below the character
+	for layer in range(0, cat_layer):
+		temp_tile_collection_2.append([])
+		draw_full_layer(layer, temp_tile_collection_1[layer])
+		print("L1: %s" % layer)
+	
+	if draw_step > 1:
+		for layer in range(cat_layer, layer_count):
+			print("L2: %s" % layer)
+			temp_tile_collection_2.append([])
+			for tile in temp_tile_collection_1[layer]:
+				if (even_y == true):
+					if (tile.x < cat_tile.x):
+						calc_tile = base_tile
+						#calc_tile.y -= 1
+						calc_tile.x -= 1
+					else:
+						calc_tile = cat_tile
+				else: # even_tile = false
+					if (tile.x > base_tile.x):
+						calc_tile = base_tile
+						calc_tile.x += 1
+					else:
+						calc_tile = cat_tile
+					
+				if (layer == cat_layer) and (tile == cat_tile):
+					draw_tile(layer, tile)
+					
+				elif tile.y < (calc_tile.y-((layer-cat_layer)*2))+(2*abs(calc_tile.x-tile.x)):
+					draw_tile(layer, tile)
+				
+				else:
+					temp_tile_collection_2[layer].append(tile)
+	
+		#if draw_ramp:
+			#draw_tile(potential_ramp_layer, ramp_tile)
+			#temp_tile_collection_2[potential_ramp_layer].erase(ramp_tile)
+	
+	if draw_step > 2:
+		var txt = cat.get_node("Sprite2D").get_texture()
+		draw_texture_rect(txt, Rect2(cat.position.x-8, cat.position.y-16, 16, 16), false)
+	
+	if draw_step > 3:
+		# TODO: offset y can be layer * 2
+		
+		for layer in range(cat_layer, layer_count):
+			
+			for tile in temp_tile_collection_2[layer]:
+				draw_tile(layer, tile)
+
+
+
+
+func yet_another_draw_function():
+	pass

@@ -1,5 +1,8 @@
-[gd_scene format=3 uid="uid://xw34t445eeeq"]
+[gd_scene load_steps=2 format=3 uid="uid://xw34t445eeeq"]
+
+[ext_resource type="NavigationMesh" uid="uid://nuyve52p0spf" path="res://saved_navmesh.tres" id="1_ow5ru"]
 
 [node name="NavMeshTest" type="Node3D"]
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = ExtResource("1_ow5ru")
